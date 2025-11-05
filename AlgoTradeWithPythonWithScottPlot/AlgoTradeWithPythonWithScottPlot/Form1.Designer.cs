@@ -205,7 +205,7 @@
             // 
             // btnClearLogs
             // 
-            btnClearLogs.Location = new Point(125, 15);
+            btnClearLogs.Location = new Point(396, 63);
             btnClearLogs.Name = "btnClearLogs";
             btnClearLogs.Size = new Size(100, 30);
             btnClearLogs.TabIndex = 1;
@@ -215,7 +215,7 @@
             // 
             // btnToggleLogs
             // 
-            btnToggleLogs.Location = new Point(12, 15);
+            btnToggleLogs.Location = new Point(396, 27);
             btnToggleLogs.Name = "btnToggleLogs";
             btnToggleLogs.Size = new Size(100, 30);
             btnToggleLogs.TabIndex = 0;
