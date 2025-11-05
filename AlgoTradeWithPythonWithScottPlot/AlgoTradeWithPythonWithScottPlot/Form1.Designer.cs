@@ -49,12 +49,14 @@
             pnlLogs = new Panel();
             txtLogs = new TextBox();
             pnlCenter = new Panel();
+            formsPlot1 = new ScottPlot.WinForms.FormsPlot();
             statusStrip1 = new StatusStrip();
             statusLabel = new ToolStripStatusLabel();
             menuStrip1.SuspendLayout();
             pnlTop.SuspendLayout();
             pnlBottom.SuspendLayout();
             pnlLogs.SuspendLayout();
+            pnlCenter.SuspendLayout();
             statusStrip1.SuspendLayout();
             SuspendLayout();
             // 
@@ -229,11 +231,21 @@
             // pnlCenter
             // 
             pnlCenter.BackColor = Color.White;
+            pnlCenter.Controls.Add(formsPlot1);
             pnlCenter.Dock = DockStyle.Fill;
             pnlCenter.Location = new Point(42, 84);
             pnlCenter.Name = "pnlCenter";
             pnlCenter.Size = new Size(1333, 335);
             pnlCenter.TabIndex = 3;
+            // 
+            // formsPlot1
+            // 
+            formsPlot1.DisplayScale = 1F;
+            formsPlot1.Dock = DockStyle.Fill;
+            formsPlot1.Location = new Point(0, 0);
+            formsPlot1.Name = "formsPlot1";
+            formsPlot1.Size = new Size(1333, 335);
+            formsPlot1.TabIndex = 0;
             // 
             // statusStrip1
             // 
@@ -273,6 +285,7 @@
             pnlBottom.ResumeLayout(false);
             pnlLogs.ResumeLayout(false);
             pnlLogs.PerformLayout();
+            pnlCenter.ResumeLayout(false);
             statusStrip1.ResumeLayout(false);
             statusStrip1.PerformLayout();
             ResumeLayout(false);
@@ -304,5 +317,6 @@
         private TextBox txtLogs;
         private StatusStrip statusStrip1;
         private ToolStripStatusLabel statusLabel;
+        private ScottPlot.WinForms.FormsPlot formsPlot1;
     }
 }
