@@ -5,20 +5,29 @@ namespace AlgoTradeWithPythonWithScottPlot
     public partial class Form1 : Form
     {
         private AlgoTrader algoTrader;
+        private GuiManager guiManager;
         private readonly ILogger logger = Log.ForContext<Form1>();
         private System.Threading.Timer logUpdateTimer;
 
         public Form1()
         {
             InitializeComponent();
-            logger.Information("Form1 constructor called - Creating AlgoTrader instance");
+            logger.Information("Form1 constructor called - Creating components");
+            
+            // Create GuiManager and AlgoTrader
+            guiManager = new GuiManager();
+            guiManager.Initialize(this);
             algoTrader = new AlgoTrader();
+            
+            // Connect GuiManager and AlgoTrader
+            algoTrader.SetGuiManager(guiManager);
+            
             logger.Information("Form1 initialized successfully");
             
             // Initial status
             btnToggleLogs.Text = "Hide Logs";
             showLogsToolStripMenuItem.Text = "Hide Logs";
-            statusLabel.Text = "Application started - Log panel visible";
+            guiManager.UpdateStatus("Application started - Log panel visible");
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -64,30 +73,12 @@ namespace AlgoTradeWithPythonWithScottPlot
 
         private void btnToggleLogs_Click(object sender, EventArgs e)
         {
-            if (pnlLogs.Visible)
-            {
-                pnlLogs.Visible = false;
-                pnlBottom.Visible = false;
-                btnToggleLogs.Text = "Show Logs";
-                showLogsToolStripMenuItem.Text = "Show Logs";
-                statusLabel.Text = "Log panel hidden";
-                logger.Information("Log panel hidden");
-            }
-            else
-            {
-                pnlLogs.Visible = true;
-                pnlBottom.Visible = true;
-                btnToggleLogs.Text = "Hide Logs";
-                showLogsToolStripMenuItem.Text = "Hide Logs";
-                statusLabel.Text = "Log panel shown";
-                logger.Information("Log panel shown");
-            }
+            guiManager.ToggleLogPanel();
         }
 
         private void btnClearLogs_Click(object sender, EventArgs e)
         {
-            txtLogs.Clear();
-            logger.Information("Log display cleared");
+            guiManager.ClearLogs();
         }
 
         // Menu event handlers
@@ -99,47 +90,50 @@ namespace AlgoTradeWithPythonWithScottPlot
 
         private void showLogsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            btnToggleLogs_Click(sender, e);
+            guiManager.ToggleLogPanel();
         }
 
         private void clearLogsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            btnClearLogs_Click(sender, e);
+            guiManager.ClearLogs();
         }
 
         private void initToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            algoTrader.Init();
+            guiManager.TriggerInit();
         }
 
         private void startToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            algoTrader.Start();
+            guiManager.TriggerStart();
         }
 
         private void stopToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            algoTrader.Stop();
+            guiManager.TriggerStop();
         }
 
         private void resetToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            algoTrader.Reset();
+            guiManager.TriggerReset();
         }
 
         private void terminateToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            algoTrader.Terminate();
+            guiManager.TriggerTerminate();
         }
 
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
         {
-            logger.Information("Form1_FormClosed event triggered - Disposing AlgoTrader");
+            logger.Information("Form1_FormClosed event triggered - Disposing components");
             
             // Timer'ı durdur
             logUpdateTimer?.Dispose();
             
+            // Dispose components
             algoTrader?.Dispose();
+            guiManager?.Dispose();
+            
             logger.Information("Form1 cleanup completed");
         }
     }

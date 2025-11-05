@@ -45,19 +45,19 @@
             btnToggleLogs = new Button();
             pnlLeft = new Panel();
             pnlRight = new Panel();
-            pnlBottom = new Panel();
-            pnlLogs = new Panel();
-            txtLogs = new TextBox();
             pnlCenter = new Panel();
             formsPlot1 = new ScottPlot.WinForms.FormsPlot();
             statusStrip1 = new StatusStrip();
             statusLabel = new ToolStripStatusLabel();
+            pnlBottom = new Panel();
+            pnlLogs = new Panel();
+            txtLogs = new TextBox();
             menuStrip1.SuspendLayout();
             pnlTop.SuspendLayout();
-            pnlBottom.SuspendLayout();
-            pnlLogs.SuspendLayout();
             pnlCenter.SuspendLayout();
             statusStrip1.SuspendLayout();
+            pnlBottom.SuspendLayout();
+            pnlLogs.SuspendLayout();
             SuspendLayout();
             // 
             // menuStrip1
@@ -193,40 +193,9 @@
             pnlRight.Dock = DockStyle.Right;
             pnlRight.Location = new Point(1375, 84);
             pnlRight.Name = "pnlRight";
-            pnlRight.Size = new Size(40, 335);
+            pnlRight.Size = new Size(40, 489);
             pnlRight.TabIndex = 5;
             pnlRight.Visible = false;
-            // 
-            // pnlBottom
-            // 
-            pnlBottom.BackColor = Color.LightYellow;
-            pnlBottom.Controls.Add(pnlLogs);
-            pnlBottom.Dock = DockStyle.Bottom;
-            pnlBottom.Location = new Point(42, 419);
-            pnlBottom.Name = "pnlBottom";
-            pnlBottom.Size = new Size(1373, 154);
-            pnlBottom.TabIndex = 2;
-            // 
-            // pnlLogs
-            // 
-            pnlLogs.Controls.Add(txtLogs);
-            pnlLogs.Dock = DockStyle.Fill;
-            pnlLogs.Location = new Point(0, 0);
-            pnlLogs.Name = "pnlLogs";
-            pnlLogs.Size = new Size(1373, 154);
-            pnlLogs.TabIndex = 4;
-            // 
-            // txtLogs
-            // 
-            txtLogs.Dock = DockStyle.Fill;
-            txtLogs.Font = new Font("Consolas", 9F);
-            txtLogs.Location = new Point(0, 0);
-            txtLogs.Multiline = true;
-            txtLogs.Name = "txtLogs";
-            txtLogs.ReadOnly = true;
-            txtLogs.ScrollBars = ScrollBars.Both;
-            txtLogs.Size = new Size(1373, 154);
-            txtLogs.TabIndex = 0;
             // 
             // pnlCenter
             // 
@@ -262,14 +231,45 @@
             statusLabel.Size = new Size(39, 17);
             statusLabel.Text = "Ready";
             // 
+            // pnlBottom
+            // 
+            pnlBottom.BackColor = Color.LightYellow;
+            pnlBottom.Controls.Add(pnlLogs);
+            pnlBottom.Dock = DockStyle.Bottom;
+            pnlBottom.Location = new Point(42, 419);
+            pnlBottom.Name = "pnlBottom";
+            pnlBottom.Size = new Size(1333, 154);
+            pnlBottom.TabIndex = 7;
+            // 
+            // pnlLogs
+            // 
+            pnlLogs.Controls.Add(txtLogs);
+            pnlLogs.Dock = DockStyle.Fill;
+            pnlLogs.Location = new Point(0, 0);
+            pnlLogs.Name = "pnlLogs";
+            pnlLogs.Size = new Size(1333, 154);
+            pnlLogs.TabIndex = 4;
+            // 
+            // txtLogs
+            // 
+            txtLogs.Dock = DockStyle.Fill;
+            txtLogs.Font = new Font("Consolas", 9F);
+            txtLogs.Location = new Point(0, 0);
+            txtLogs.Multiline = true;
+            txtLogs.Name = "txtLogs";
+            txtLogs.ReadOnly = true;
+            txtLogs.ScrollBars = ScrollBars.Both;
+            txtLogs.Size = new Size(1333, 154);
+            txtLogs.TabIndex = 0;
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1415, 595);
             Controls.Add(pnlCenter);
-            Controls.Add(pnlRight);
             Controls.Add(pnlBottom);
+            Controls.Add(pnlRight);
             Controls.Add(pnlLeft);
             Controls.Add(pnlTop);
             Controls.Add(statusStrip1);
@@ -282,12 +282,12 @@
             menuStrip1.ResumeLayout(false);
             menuStrip1.PerformLayout();
             pnlTop.ResumeLayout(false);
-            pnlBottom.ResumeLayout(false);
-            pnlLogs.ResumeLayout(false);
-            pnlLogs.PerformLayout();
             pnlCenter.ResumeLayout(false);
             statusStrip1.ResumeLayout(false);
             statusStrip1.PerformLayout();
+            pnlBottom.ResumeLayout(false);
+            pnlLogs.ResumeLayout(false);
+            pnlLogs.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -311,12 +311,12 @@
         private Button btnClearLogs;
         private Panel pnlLeft;
         private Panel pnlRight;
-        private Panel pnlBottom;
         private Panel pnlCenter;
-        private Panel pnlLogs;
-        private TextBox txtLogs;
         private StatusStrip statusStrip1;
         private ToolStripStatusLabel statusLabel;
         private ScottPlot.WinForms.FormsPlot formsPlot1;
+        private Panel pnlBottom;
+        private Panel pnlLogs;
+        private TextBox txtLogs;
     }
 }
