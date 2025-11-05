@@ -123,6 +123,60 @@ namespace AlgoTradeWithPythonWithScottPlot
             guiManager.TriggerTerminate();
         }
 
+        // Plot menu event handlers
+        private void addPlotToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            string createdId = guiManager.AddPlot();
+            if (!string.IsNullOrEmpty(createdId))
+            {
+                var plot = guiManager.GetPlot(createdId);
+                if (plot != null)
+                {
+                    // Sample sine wave
+                    double[] x = new double[100];
+                    double[] y = new double[100];
+                    var random = new Random();
+                    for (int i = 0; i < 100; i++)
+                    {
+                        x[i] = i * 0.1;
+                        y[i] = Math.Sin(x[i] + random.NextDouble() * 2 * Math.PI);
+                    }
+                    plot.Plot.Add.Scatter(x, y);
+                    // Clean up the ID for display: "0" -> "Plot 0", "Plot_1" -> "Plot 1"
+                    string displayName = createdId.StartsWith("Plot_") ? 
+                        $"Plot {createdId.Substring(5)}" : 
+                        $"Plot {createdId}";
+                    plot.Plot.Title(displayName);
+                    plot.Refresh();
+                    
+                    logger.Information($"Plot {createdId} added and displayed");
+                }
+            }
+        }
+
+        private void deletePlotToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var plotIds = guiManager.GetPlotIds().ToList();
+            if (plotIds.Count > 0)
+            {
+                // Delete the last created plot
+                string lastPlotId = plotIds.LastOrDefault();
+                if (!string.IsNullOrEmpty(lastPlotId))
+                {
+                    guiManager.DeletePlot(lastPlotId);
+                }
+            }
+            else
+            {
+                guiManager.UpdateStatus("No plots to delete");
+            }
+        }
+
+        private void clearAllPlotsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            guiManager.ClearAllPlots();
+        }
+
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
         {
             logger.Information("Form1_FormClosed event triggered - Disposing components");

@@ -34,6 +34,10 @@
             viewToolStripMenuItem = new ToolStripMenuItem();
             showLogsToolStripMenuItem = new ToolStripMenuItem();
             clearLogsToolStripMenuItem = new ToolStripMenuItem();
+            plotsToolStripMenuItem = new ToolStripMenuItem();
+            addPlotToolStripMenuItem = new ToolStripMenuItem();
+            deletePlotToolStripMenuItem = new ToolStripMenuItem();
+            clearAllPlotsToolStripMenuItem = new ToolStripMenuItem();
             algoTraderToolStripMenuItem = new ToolStripMenuItem();
             initToolStripMenuItem = new ToolStripMenuItem();
             startToolStripMenuItem = new ToolStripMenuItem();
@@ -46,7 +50,6 @@
             pnlLeft = new Panel();
             pnlRight = new Panel();
             pnlCenter = new Panel();
-            formsPlot1 = new ScottPlot.WinForms.FormsPlot();
             statusStrip1 = new StatusStrip();
             statusLabel = new ToolStripStatusLabel();
             pnlBottom = new Panel();
@@ -54,7 +57,6 @@
             txtLogs = new TextBox();
             menuStrip1.SuspendLayout();
             pnlTop.SuspendLayout();
-            pnlCenter.SuspendLayout();
             statusStrip1.SuspendLayout();
             pnlBottom.SuspendLayout();
             pnlLogs.SuspendLayout();
@@ -62,7 +64,7 @@
             // 
             // menuStrip1
             // 
-            menuStrip1.Items.AddRange(new ToolStripItem[] { fileToolStripMenuItem, viewToolStripMenuItem, algoTraderToolStripMenuItem });
+            menuStrip1.Items.AddRange(new ToolStripItem[] { fileToolStripMenuItem, viewToolStripMenuItem, plotsToolStripMenuItem, algoTraderToolStripMenuItem });
             menuStrip1.Location = new Point(0, 0);
             menuStrip1.Name = "menuStrip1";
             menuStrip1.Size = new Size(1415, 24);
@@ -103,6 +105,34 @@
             clearLogsToolStripMenuItem.Size = new Size(131, 22);
             clearLogsToolStripMenuItem.Text = "Clear Logs";
             clearLogsToolStripMenuItem.Click += clearLogsToolStripMenuItem_Click;
+            // 
+            // plotsToolStripMenuItem
+            // 
+            plotsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { addPlotToolStripMenuItem, deletePlotToolStripMenuItem, clearAllPlotsToolStripMenuItem });
+            plotsToolStripMenuItem.Name = "plotsToolStripMenuItem";
+            plotsToolStripMenuItem.Size = new Size(44, 20);
+            plotsToolStripMenuItem.Text = "Plots";
+            // 
+            // addPlotToolStripMenuItem
+            // 
+            addPlotToolStripMenuItem.Name = "addPlotToolStripMenuItem";
+            addPlotToolStripMenuItem.Size = new Size(150, 22);
+            addPlotToolStripMenuItem.Text = "Add Plot";
+            addPlotToolStripMenuItem.Click += addPlotToolStripMenuItem_Click;
+            // 
+            // deletePlotToolStripMenuItem
+            // 
+            deletePlotToolStripMenuItem.Name = "deletePlotToolStripMenuItem";
+            deletePlotToolStripMenuItem.Size = new Size(150, 22);
+            deletePlotToolStripMenuItem.Text = "Delete Plot";
+            deletePlotToolStripMenuItem.Click += deletePlotToolStripMenuItem_Click;
+            // 
+            // clearAllPlotsToolStripMenuItem
+            // 
+            clearAllPlotsToolStripMenuItem.Name = "clearAllPlotsToolStripMenuItem";
+            clearAllPlotsToolStripMenuItem.Size = new Size(150, 22);
+            clearAllPlotsToolStripMenuItem.Text = "Clear All Plots";
+            clearAllPlotsToolStripMenuItem.Click += clearAllPlotsToolStripMenuItem_Click;
             // 
             // algoTraderToolStripMenuItem
             // 
@@ -199,22 +229,13 @@
             // 
             // pnlCenter
             // 
+            pnlCenter.AutoScroll = true;
             pnlCenter.BackColor = Color.White;
-            pnlCenter.Controls.Add(formsPlot1);
             pnlCenter.Dock = DockStyle.Fill;
             pnlCenter.Location = new Point(42, 84);
             pnlCenter.Name = "pnlCenter";
             pnlCenter.Size = new Size(1333, 335);
             pnlCenter.TabIndex = 3;
-            // 
-            // formsPlot1
-            // 
-            formsPlot1.DisplayScale = 1F;
-            formsPlot1.Dock = DockStyle.Fill;
-            formsPlot1.Location = new Point(0, 0);
-            formsPlot1.Name = "formsPlot1";
-            formsPlot1.Size = new Size(1333, 335);
-            formsPlot1.TabIndex = 0;
             // 
             // statusStrip1
             // 
@@ -277,12 +298,12 @@
             MainMenuStrip = menuStrip1;
             Name = "Form1";
             Text = "AlgoTrader";
+            WindowState = FormWindowState.Maximized;
             FormClosed += Form1_FormClosed;
             Load += Form1_Load;
             menuStrip1.ResumeLayout(false);
             menuStrip1.PerformLayout();
             pnlTop.ResumeLayout(false);
-            pnlCenter.ResumeLayout(false);
             statusStrip1.ResumeLayout(false);
             statusStrip1.PerformLayout();
             pnlBottom.ResumeLayout(false);
@@ -300,6 +321,10 @@
         private ToolStripMenuItem viewToolStripMenuItem;
         private ToolStripMenuItem showLogsToolStripMenuItem;
         private ToolStripMenuItem clearLogsToolStripMenuItem;
+        private ToolStripMenuItem plotsToolStripMenuItem;
+        private ToolStripMenuItem addPlotToolStripMenuItem;
+        private ToolStripMenuItem deletePlotToolStripMenuItem;
+        private ToolStripMenuItem clearAllPlotsToolStripMenuItem;
         private ToolStripMenuItem algoTraderToolStripMenuItem;
         private ToolStripMenuItem initToolStripMenuItem;
         private ToolStripMenuItem startToolStripMenuItem;
@@ -314,7 +339,6 @@
         private Panel pnlCenter;
         private StatusStrip statusStrip1;
         private ToolStripStatusLabel statusLabel;
-        private ScottPlot.WinForms.FormsPlot formsPlot1;
         private Panel pnlBottom;
         private Panel pnlLogs;
         private TextBox txtLogs;
