@@ -97,14 +97,14 @@
             // showLogsToolStripMenuItem
             // 
             showLogsToolStripMenuItem.Name = "showLogsToolStripMenuItem";
-            showLogsToolStripMenuItem.Size = new Size(131, 22);
+            showLogsToolStripMenuItem.Size = new Size(180, 22);
             showLogsToolStripMenuItem.Text = "Show Logs";
             showLogsToolStripMenuItem.Click += showLogsToolStripMenuItem_Click;
             // 
             // clearLogsToolStripMenuItem
             // 
             clearLogsToolStripMenuItem.Name = "clearLogsToolStripMenuItem";
-            clearLogsToolStripMenuItem.Size = new Size(131, 22);
+            clearLogsToolStripMenuItem.Size = new Size(180, 22);
             clearLogsToolStripMenuItem.Text = "Clear Logs";
             clearLogsToolStripMenuItem.Click += clearLogsToolStripMenuItem_Click;
             // 
@@ -277,6 +277,7 @@
             pnlBottom.Name = "pnlBottom";
             pnlBottom.Size = new Size(1333, 154);
             pnlBottom.TabIndex = 7;
+            pnlBottom.Visible = false;
             // 
             // pnlLogs
             // 
@@ -286,6 +287,7 @@
             pnlLogs.Name = "pnlLogs";
             pnlLogs.Size = new Size(1333, 154);
             pnlLogs.TabIndex = 4;
+            pnlLogs.Visible = false;
             // 
             // txtLogs
             // 

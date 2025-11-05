@@ -68,7 +68,7 @@ namespace AlgoTradeWithPythonWithScottPlot
 
         // Throttling for real-time sync
         private DateTime lastMouseMoveSync = DateTime.MinValue;
-        private const int MOUSE_MOVE_SYNC_THROTTLE_MS = 50; // 50ms throttle
+        private const int MOUSE_MOVE_SYNC_THROTTLE_MS = 10; // 10ms throttle
 
         public GuiManager()
         {
@@ -80,13 +80,16 @@ namespace AlgoTradeWithPythonWithScottPlot
         {
             mainForm = form;
             logger.Information("GuiManager initialized with Form1 reference");
-            
+
             // Cache form control references for performance
             CacheControlReferences();
-            
+
+            // Initialize log panel button text based on default visibility
+            UpdateLogPanelButtonText();
+
             // Create global control buttons
             CreateGlobalControls();
-            
+
             // Prevent mouse wheel scrolling on center panel when over plots
             if (pnlCenter != null)
             {
@@ -220,14 +223,23 @@ namespace AlgoTradeWithPythonWithScottPlot
                 bool isVisible = pnlLogs.Visible;
                 SetPanelVisibility(pnlLogs, !isVisible);
                 SetPanelVisibility(pnlBottom, !isVisible);
-                
+
                 // Update button and menu text
-                string newText = isVisible ? "Show Logs" : "Hide Logs";
-                if (btnToggleLogs != null) btnToggleLogs.Text = newText;
-                if (showLogsMenuItem != null) showLogsMenuItem.Text = newText;
-                
+                UpdateLogPanelButtonText();
+
                 UpdateStatus(isVisible ? "Log panel hidden" : "Log panel shown");
                 logger.Information($"Log panel toggled - now {(isVisible ? "hidden" : "shown")}");
+            }
+        }
+
+        private void UpdateLogPanelButtonText()
+        {
+            if (pnlLogs != null)
+            {
+                bool isVisible = pnlLogs.Visible;
+                string newText = isVisible ? "Hide Logs" : "Show Logs";
+                if (btnToggleLogs != null) btnToggleLogs.Text = newText;
+                if (showLogsMenuItem != null) showLogsMenuItem.Text = newText;
             }
         }
 
@@ -377,6 +389,7 @@ namespace AlgoTradeWithPythonWithScottPlot
                 plotInfo.Container.Controls.Add(plotInfo.ResetButton);
                 plotInfo.Container.Controls.Add(plotInfo.ResetXButton);
                 plotInfo.Container.Controls.Add(plotInfo.ResetYButton);
+                plotInfo.Container.Controls.Add(plotInfo.CopyToAllButton);
 
                 // Add container to parent panel (default: pnlCenter)
                 Panel parent = parentPanel ?? pnlCenter;
@@ -514,6 +527,18 @@ namespace AlgoTradeWithPythonWithScottPlot
                 Font = new Font("Arial", 10, FontStyle.Bold)
             };
 
+            plotInfo.CopyToAllButton = new Button
+            {
+                Name = $"btnCopyToAll_{plotInfo.Id}",
+                Text = "⇄",
+                Size = new Size(buttonSize, buttonSize),
+                Location = new Point(margin, yStartY + 4 * (buttonSize + margin)),
+                Anchor = AnchorStyles.Left,
+                BackColor = Color.LightGreen,
+                ForeColor = Color.Black,
+                Font = new Font("Arial", 10, FontStyle.Bold)
+            };
+
             // X-axis controls (top right, horizontal stack)
             int xStartX = plotInfo.Container.Width - (4 * buttonSize + 4 * margin);
             
@@ -632,7 +657,10 @@ namespace AlgoTradeWithPythonWithScottPlot
             plotInfo.ResetButton.Click += (sender, e) => ResetPlotView(plotInfo);
             plotInfo.ResetXButton.Click += (sender, e) => ResetPlotViewX(plotInfo);
             plotInfo.ResetYButton.Click += (sender, e) => ResetPlotViewY(plotInfo);
-            
+
+            // Add event handler for copy to all functionality
+            plotInfo.CopyToAllButton.Click += (sender, e) => CopyPlotSettingsToAll(plotInfo);
+
             // Add mouse synchronization event handlers
             plotInfo.Plot.MouseUp += (sender, e) => OnPlotMouseUp(plotInfo);
             plotInfo.Plot.MouseWheel += (sender, e) => OnPlotMouseWheel(plotInfo, e);
@@ -826,19 +854,19 @@ namespace AlgoTradeWithPythonWithScottPlot
         {
             try
             {
-                // Check if mouse wheel sync is enabled
-                //if (syncMouseWheelCheckBox?.Checked != true)
-                //    return;
-
                 // Mouse wheel event'ini consume et - scroll'a geçmesini önle
                 if (e is HandledMouseEventArgs handledArgs)
                 {
                     handledArgs.Handled = true;
                 }
 
+                // Check if mouse wheel sync is enabled
+                if (syncMouseWheelCheckBox?.Checked != true)
+                    return;
+
                 // Get the current limits of the source plot after wheel zoom
                 var sourceLimits = sourcePlot.Plot.Plot.Axes.GetLimits();
-                
+
                 // Apply to all other plots
                 foreach (var plot in plots.Values)
                 {
@@ -876,17 +904,10 @@ namespace AlgoTradeWithPythonWithScottPlot
         {
             try
             {
-                // Throttle the sync to avoid too frequent updates
-                var now = DateTime.Now;
-                if ((now - lastMouseMoveSync).TotalMilliseconds < MOUSE_MOVE_SYNC_THROTTLE_MS)
-                    return;
-                
-                lastMouseMoveSync = now;
-
                 // Check if real-time sync is enabled (either drag or pan)
                 bool syncDrag = syncMouseDragCheckBox?.Checked == true;
                 bool syncPan = syncPanCheckBox?.Checked == true;
-                
+
                 if (!syncDrag && !syncPan)
                     return;
 
@@ -894,59 +915,78 @@ namespace AlgoTradeWithPythonWithScottPlot
                 if (e.Button == MouseButtons.None)
                     return;
 
+                // No throttle for real-time sync - immediate response like mouse wheel
                 // Get the current limits of the source plot
                 var sourceLimits = sourcePlot.Plot.Plot.Axes.GetLimits();
-                
+
+                // Batch refresh - collect plots to refresh
+                var plotsToRefresh = new List<PlotInfo>();
+
                 // Apply to all other plots
                 foreach (var plot in plots.Values)
                 {
                     if (plot.Id == sourcePlot.Id) continue; // Skip source plot
-                    
+
                     try
                     {
                         var currentLimits = plot.Plot.Plot.Axes.GetLimits();
                         bool shouldUpdate = false;
-                        
+
                         // For pan sync during drag: preserve zoom level, apply center position
                         if (syncPan && e.Button == MouseButtons.Left)
                         {
                             double sourceCenterX = (sourceLimits.Left + sourceLimits.Right) / 2;
                             double sourceCenterY = (sourceLimits.Bottom + sourceLimits.Top) / 2;
-                            
+
                             double currentRangeX = currentLimits.Right - currentLimits.Left;
                             double currentRangeY = currentLimits.Top - currentLimits.Bottom;
-                            
+
                             double newLeft = sourceCenterX - currentRangeX / 2;
                             double newRight = sourceCenterX + currentRangeX / 2;
                             double newBottom = sourceCenterY - currentRangeY / 2;
                             double newTop = sourceCenterY + currentRangeY / 2;
-                            
+
                             plot.Plot.Plot.Axes.SetLimits(newLeft, newRight, newBottom, newTop);
                             shouldUpdate = true;
                         }
-                        
+
                         // For drag sync: apply exact limits (both position and zoom)
                         if (syncDrag && (e.Button == MouseButtons.Right || e.Button == MouseButtons.Middle))
                         {
                             plot.Plot.Plot.Axes.SetLimits(sourceLimits);
                             shouldUpdate = true;
                         }
-                        
+
                         if (shouldUpdate)
                         {
-                            if (mainForm.InvokeRequired)
-                            {
-                                mainForm.Invoke(() => plot.Plot.Refresh());
-                            }
-                            else
-                            {
-                                plot.Plot.Refresh();
-                            }
+                            plotsToRefresh.Add(plot);
                         }
                     }
                     catch (Exception ex)
                     {
                         logger.Warning($"Failed to sync mouse move for plot {plot.Id}: {ex.Message}");
+                    }
+                }
+
+                // Batch refresh all plots at once for better performance
+                if (plotsToRefresh.Count > 0)
+                {
+                    if (mainForm.InvokeRequired)
+                    {
+                        mainForm.Invoke(() =>
+                        {
+                            foreach (var plot in plotsToRefresh)
+                            {
+                                plot.Plot.Refresh();
+                            }
+                        });
+                    }
+                    else
+                    {
+                        foreach (var plot in plotsToRefresh)
+                        {
+                            plot.Plot.Refresh();
+                        }
                     }
                 }
             }
@@ -1385,7 +1425,7 @@ namespace AlgoTradeWithPythonWithScottPlot
                 Size = new Size(checkBoxWidth, checkBoxHeight),
                 Location = new Point(startX, startY + checkBoxHeight + margin),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left,
-                Checked = false, // Default disabled
+                Checked = true, // Default enabled
                 Font = new Font("Arial", 7, FontStyle.Regular),
                 TabStop = false
             };
@@ -1411,7 +1451,7 @@ namespace AlgoTradeWithPythonWithScottPlot
                 Size = new Size(checkBoxWidth, checkBoxHeight),
                 Location = new Point(startX, startY + 2 * (checkBoxHeight + margin)),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left,
-                Checked = false, // Default disabled
+                Checked = true, // Default enabled
                 Font = new Font("Arial", 7, FontStyle.Regular),
                 TabStop = false
             };
@@ -1426,20 +1466,22 @@ namespace AlgoTradeWithPythonWithScottPlot
                 Anchor = AnchorStyles.Top | AnchorStyles.Left,
                 Checked = false, // Default disabled
                 Font = new Font("Arial", 7, FontStyle.Regular),
-                TabStop = false
+                TabStop = false,
+                Visible = false
             };
 
             // Enable Mouse Wheel Scrolling (third row)
             enableScrollbarCheckBox = new CheckBox
             {
                 Name = "enableMouseWheelScroll",
-                Text = "Wheel",
+                Text = "Scrollbar",
                 Size = new Size(checkBoxWidth, checkBoxHeight),
                 Location = new Point(startX, startY + 3 * (checkBoxHeight + margin)),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left,
                 Checked = false, // Default disabled - mouse wheel scrolling off
                 Font = new Font("Arial", 7, FontStyle.Regular),
-                TabStop = false
+                TabStop = false,
+                Visible = false
             };
             
             // Add event handler for scrollbar checkbox
@@ -1495,18 +1537,11 @@ namespace AlgoTradeWithPythonWithScottPlot
         {
             try
             {
-                if (syncZoomCheckBox?.Checked == true)
+                foreach (var plot in plots.Values)
                 {
-                    foreach (var plot in plots.Values)
-                    {
-                        ZoomX(plot, factor);
-                    }
-                    logger.Debug($"Global X zoom applied to {plots.Count} plots with factor={factor}");
+                    ZoomX(plot, factor);
                 }
-                else
-                {
-                    logger.Debug("Global X zoom skipped - Sync Zoom is disabled");
-                }
+                logger.Debug($"Global X zoom applied to {plots.Count} plots with factor={factor}");
             }
             catch (Exception ex)
             {
@@ -1518,18 +1553,11 @@ namespace AlgoTradeWithPythonWithScottPlot
         {
             try
             {
-                if (syncZoomCheckBox?.Checked == true)
+                foreach (var plot in plots.Values)
                 {
-                    foreach (var plot in plots.Values)
-                    {
-                        ZoomY(plot, factor);
-                    }
-                    logger.Debug($"Global Y zoom applied to {plots.Count} plots with factor={factor}");
+                    ZoomY(plot, factor);
                 }
-                else
-                {
-                    logger.Debug("Global Y zoom skipped - Sync Zoom is disabled");
-                }
+                logger.Debug($"Global Y zoom applied to {plots.Count} plots with factor={factor}");
             }
             catch (Exception ex)
             {
@@ -1541,18 +1569,11 @@ namespace AlgoTradeWithPythonWithScottPlot
         {
             try
             {
-                if (syncPanCheckBox?.Checked == true)
+                foreach (var plot in plots.Values)
                 {
-                    foreach (var plot in plots.Values)
-                    {
-                        PanX(plot, factor);
-                    }
-                    logger.Debug($"Global X pan applied to {plots.Count} plots with factor={factor}");
+                    PanX(plot, factor);
                 }
-                else
-                {
-                    logger.Debug("Global X pan skipped - Sync Pan is disabled");
-                }
+                logger.Debug($"Global X pan applied to {plots.Count} plots with factor={factor}");
             }
             catch (Exception ex)
             {
@@ -1564,18 +1585,11 @@ namespace AlgoTradeWithPythonWithScottPlot
         {
             try
             {
-                if (syncPanCheckBox?.Checked == true)
+                foreach (var plot in plots.Values)
                 {
-                    foreach (var plot in plots.Values)
-                    {
-                        PanY(plot, factor);
-                    }
-                    logger.Debug($"Global Y pan applied to {plots.Count} plots with factor={factor}");
+                    PanY(plot, factor);
                 }
-                else
-                {
-                    logger.Debug("Global Y pan skipped - Sync Pan is disabled");
-                }
+                logger.Debug($"Global Y pan applied to {plots.Count} plots with factor={factor}");
             }
             catch (Exception ex)
             {
@@ -1587,18 +1601,11 @@ namespace AlgoTradeWithPythonWithScottPlot
         {
             try
             {
-                if (syncResetCheckBox?.Checked == true)
+                foreach (var plot in plots.Values)
                 {
-                    foreach (var plot in plots.Values)
-                    {
-                        ResetPlotView(plot);
-                    }
-                    logger.Debug($"Global reset applied to {plots.Count} plots");
+                    ResetPlotView(plot);
                 }
-                else
-                {
-                    logger.Debug("Global reset skipped - Sync Reset is disabled");
-                }
+                logger.Debug($"Global reset applied to {plots.Count} plots");
             }
             catch (Exception ex)
             {
@@ -1610,18 +1617,11 @@ namespace AlgoTradeWithPythonWithScottPlot
         {
             try
             {
-                if (syncResetCheckBox?.Checked == true)
+                foreach (var plot in plots.Values)
                 {
-                    foreach (var plot in plots.Values)
-                    {
-                        ResetPlotViewX(plot);
-                    }
-                    logger.Debug($"Global X reset applied to {plots.Count} plots");
+                    ResetPlotViewX(plot);
                 }
-                else
-                {
-                    logger.Debug("Global X reset skipped - Sync Reset is disabled");
-                }
+                logger.Debug($"Global X reset applied to {plots.Count} plots");
             }
             catch (Exception ex)
             {
@@ -1633,22 +1633,67 @@ namespace AlgoTradeWithPythonWithScottPlot
         {
             try
             {
-                if (syncResetCheckBox?.Checked == true)
+                foreach (var plot in plots.Values)
                 {
-                    foreach (var plot in plots.Values)
-                    {
-                        ResetPlotViewY(plot);
-                    }
-                    logger.Debug($"Global Y reset applied to {plots.Count} plots");
+                    ResetPlotViewY(plot);
                 }
-                else
-                {
-                    logger.Debug("Global Y reset skipped - Sync Reset is disabled");
-                }
+                logger.Debug($"Global Y reset applied to {plots.Count} plots");
             }
             catch (Exception ex)
             {
                 logger.Error($"Error during global Y reset: {ex.Message}");
+            }
+        }
+
+        private void CopyPlotSettingsToAll(PlotInfo sourcePlot)
+        {
+            try
+            {
+                if (sourcePlot?.Plot?.Plot == null)
+                {
+                    logger.Warning("Source plot is null or invalid");
+                    return;
+                }
+
+                // Get the current limits of the source plot
+                var sourceLimits = sourcePlot.Plot.Plot.Axes.GetLimits();
+
+                int copiedCount = 0;
+
+                // Apply to all other plots
+                foreach (var plot in plots.Values)
+                {
+                    if (plot.Id == sourcePlot.Id) continue; // Skip source plot
+
+                    try
+                    {
+                        // Copy exact limits (both zoom and pan) from source plot
+                        plot.Plot.Plot.Axes.SetLimits(sourceLimits);
+
+                        // Refresh the plot
+                        if (mainForm.InvokeRequired)
+                        {
+                            mainForm.Invoke(() => plot.Plot.Refresh());
+                        }
+                        else
+                        {
+                            plot.Plot.Refresh();
+                        }
+
+                        copiedCount++;
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.Warning($"Failed to copy settings to plot {plot.Id}: {ex.Message}");
+                    }
+                }
+
+                logger.Information($"Copied zoom/pan settings from plot {sourcePlot.Id} to {copiedCount} other plot(s)");
+                UpdateStatus($"Plot {sourcePlot.Id} ayarları {copiedCount} plota kopyalandı");
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"Error copying plot settings: {ex.Message}");
             }
         }
 

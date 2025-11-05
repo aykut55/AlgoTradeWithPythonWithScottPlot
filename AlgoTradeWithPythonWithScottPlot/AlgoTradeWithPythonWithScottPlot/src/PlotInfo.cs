@@ -36,6 +36,9 @@ namespace AlgoTradeWithPythonWithScottPlot
         public Button ResetXButton { get; set; }
         public Button ResetYButton { get; set; }
 
+        // Copy to all control reference
+        public Button CopyToAllButton { get; set; }
+
         private bool disposed = false;
 
         public PlotInfo(string id)
@@ -78,7 +81,10 @@ namespace AlgoTradeWithPythonWithScottPlot
                 ResetButton?.Dispose();
                 ResetXButton?.Dispose();
                 ResetYButton?.Dispose();
-                
+
+                // Dispose copy to all button
+                CopyToAllButton?.Dispose();
+
                 Container?.Dispose();
                 disposed = true;
             }
