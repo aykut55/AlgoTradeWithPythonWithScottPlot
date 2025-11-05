@@ -827,8 +827,14 @@ namespace AlgoTradeWithPythonWithScottPlot
             try
             {
                 // Check if mouse wheel sync is enabled
-                if (syncMouseWheelCheckBox?.Checked != true)
-                    return;
+                //if (syncMouseWheelCheckBox?.Checked != true)
+                //    return;
+
+                // Mouse wheel event'ini consume et - scroll'a geçmesini önle
+                if (e is HandledMouseEventArgs handledArgs)
+                {
+                    handledArgs.Handled = true;
+                }
 
                 // Get the current limits of the source plot after wheel zoom
                 var sourceLimits = sourcePlot.Plot.Plot.Axes.GetLimits();
