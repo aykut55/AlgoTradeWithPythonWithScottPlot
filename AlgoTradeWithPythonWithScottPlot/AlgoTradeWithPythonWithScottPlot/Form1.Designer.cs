@@ -200,7 +200,7 @@
             pnlTop.Dock = DockStyle.Top;
             pnlTop.Location = new Point(0, 24);
             pnlTop.Name = "pnlTop";
-            pnlTop.Size = new Size(1415, 60);
+            pnlTop.Size = new Size(1415, 127);
             pnlTop.TabIndex = 0;
             // 
             // btnClearLogs
@@ -227,9 +227,9 @@
             // 
             pnlLeft.BackColor = Color.LightBlue;
             pnlLeft.Dock = DockStyle.Left;
-            pnlLeft.Location = new Point(0, 84);
+            pnlLeft.Location = new Point(0, 151);
             pnlLeft.Name = "pnlLeft";
-            pnlLeft.Size = new Size(42, 489);
+            pnlLeft.Size = new Size(42, 422);
             pnlLeft.TabIndex = 1;
             pnlLeft.Visible = false;
             // 
@@ -237,9 +237,9 @@
             // 
             pnlRight.BackColor = Color.LightCoral;
             pnlRight.Dock = DockStyle.Right;
-            pnlRight.Location = new Point(1375, 84);
+            pnlRight.Location = new Point(1375, 151);
             pnlRight.Name = "pnlRight";
-            pnlRight.Size = new Size(40, 489);
+            pnlRight.Size = new Size(40, 422);
             pnlRight.TabIndex = 5;
             pnlRight.Visible = false;
             // 
@@ -248,9 +248,9 @@
             pnlCenter.AutoScroll = true;
             pnlCenter.BackColor = Color.White;
             pnlCenter.Dock = DockStyle.Fill;
-            pnlCenter.Location = new Point(42, 84);
+            pnlCenter.Location = new Point(42, 151);
             pnlCenter.Name = "pnlCenter";
-            pnlCenter.Size = new Size(1333, 335);
+            pnlCenter.Size = new Size(1333, 268);
             pnlCenter.TabIndex = 3;
             // 
             // statusStrip1
