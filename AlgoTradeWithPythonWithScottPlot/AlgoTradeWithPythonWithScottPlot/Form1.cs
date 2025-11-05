@@ -132,14 +132,14 @@ namespace AlgoTradeWithPythonWithScottPlot
                 var plot = guiManager.GetPlot(createdId);
                 if (plot != null)
                 {
-                    // Sample sine wave
-                    double[] x = new double[100];
-                    double[] y = new double[100];
+                    // Sample sine wave with more data points for better pan visibility
+                    double[] x = new double[1000];
+                    double[] y = new double[1000];
                     var random = new Random();
-                    for (int i = 0; i < 100; i++)
+                    for (int i = 0; i < 1000; i++)
                     {
-                        x[i] = i * 0.1;
-                        y[i] = Math.Sin(x[i] + random.NextDouble() * 2 * Math.PI);
+                        x[i] = i * 0.05; // Wider X range (0 to 50)
+                        y[i] = Math.Sin(x[i] * 0.5) + 0.3 * Math.Sin(x[i] * 3) + 0.1 * random.NextDouble(); // Complex wave with noise
                     }
                     plot.Plot.Add.Scatter(x, y);
                     // Clean up the ID for display: "0" -> "Plot 0", "Plot_1" -> "Plot 1"

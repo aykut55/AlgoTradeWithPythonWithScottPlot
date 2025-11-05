@@ -112,41 +112,41 @@
             // 
             plotsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { addPlotToolStripMenuItem, deletePlotToolStripMenuItem, clearAllPlotsToolStripMenuItem, hideAllPlotsToolStripMenuItem, showAllPlotsToolStripMenuItem });
             plotsToolStripMenuItem.Name = "plotsToolStripMenuItem";
-            plotsToolStripMenuItem.Size = new Size(44, 20);
+            plotsToolStripMenuItem.Size = new Size(45, 20);
             plotsToolStripMenuItem.Text = "Plots";
             // 
             // addPlotToolStripMenuItem
             // 
             addPlotToolStripMenuItem.Name = "addPlotToolStripMenuItem";
-            addPlotToolStripMenuItem.Size = new Size(150, 22);
+            addPlotToolStripMenuItem.Size = new Size(153, 22);
             addPlotToolStripMenuItem.Text = "Add Plot";
             addPlotToolStripMenuItem.Click += addPlotToolStripMenuItem_Click;
             // 
             // deletePlotToolStripMenuItem
             // 
             deletePlotToolStripMenuItem.Name = "deletePlotToolStripMenuItem";
-            deletePlotToolStripMenuItem.Size = new Size(180, 22);
+            deletePlotToolStripMenuItem.Size = new Size(153, 22);
             deletePlotToolStripMenuItem.Text = "Delete All Plots";
             deletePlotToolStripMenuItem.Click += deletePlotToolStripMenuItem_Click;
             // 
             // clearAllPlotsToolStripMenuItem
             // 
             clearAllPlotsToolStripMenuItem.Name = "clearAllPlotsToolStripMenuItem";
-            clearAllPlotsToolStripMenuItem.Size = new Size(180, 22);
+            clearAllPlotsToolStripMenuItem.Size = new Size(153, 22);
             clearAllPlotsToolStripMenuItem.Text = "Clear Data";
             clearAllPlotsToolStripMenuItem.Click += clearAllPlotsToolStripMenuItem_Click;
             // 
             // hideAllPlotsToolStripMenuItem
             // 
             hideAllPlotsToolStripMenuItem.Name = "hideAllPlotsToolStripMenuItem";
-            hideAllPlotsToolStripMenuItem.Size = new Size(180, 22);
+            hideAllPlotsToolStripMenuItem.Size = new Size(153, 22);
             hideAllPlotsToolStripMenuItem.Text = "Hide All Plots";
             hideAllPlotsToolStripMenuItem.Click += hideAllPlotsToolStripMenuItem_Click;
             // 
             // showAllPlotsToolStripMenuItem
             // 
             showAllPlotsToolStripMenuItem.Name = "showAllPlotsToolStripMenuItem";
-            showAllPlotsToolStripMenuItem.Size = new Size(180, 22);
+            showAllPlotsToolStripMenuItem.Size = new Size(153, 22);
             showAllPlotsToolStripMenuItem.Text = "Show All Plots";
             showAllPlotsToolStripMenuItem.Click += showAllPlotsToolStripMenuItem_Click;
             // 
