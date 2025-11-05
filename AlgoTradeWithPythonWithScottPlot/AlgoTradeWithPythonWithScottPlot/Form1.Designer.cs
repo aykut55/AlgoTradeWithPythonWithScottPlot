@@ -38,6 +38,8 @@
             addPlotToolStripMenuItem = new ToolStripMenuItem();
             deletePlotToolStripMenuItem = new ToolStripMenuItem();
             clearAllPlotsToolStripMenuItem = new ToolStripMenuItem();
+            hideAllPlotsToolStripMenuItem = new ToolStripMenuItem();
+            showAllPlotsToolStripMenuItem = new ToolStripMenuItem();
             algoTraderToolStripMenuItem = new ToolStripMenuItem();
             initToolStripMenuItem = new ToolStripMenuItem();
             startToolStripMenuItem = new ToolStripMenuItem();
@@ -108,7 +110,7 @@
             // 
             // plotsToolStripMenuItem
             // 
-            plotsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { addPlotToolStripMenuItem, deletePlotToolStripMenuItem, clearAllPlotsToolStripMenuItem });
+            plotsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { addPlotToolStripMenuItem, deletePlotToolStripMenuItem, clearAllPlotsToolStripMenuItem, hideAllPlotsToolStripMenuItem, showAllPlotsToolStripMenuItem });
             plotsToolStripMenuItem.Name = "plotsToolStripMenuItem";
             plotsToolStripMenuItem.Size = new Size(44, 20);
             plotsToolStripMenuItem.Text = "Plots";
@@ -123,16 +125,30 @@
             // deletePlotToolStripMenuItem
             // 
             deletePlotToolStripMenuItem.Name = "deletePlotToolStripMenuItem";
-            deletePlotToolStripMenuItem.Size = new Size(150, 22);
-            deletePlotToolStripMenuItem.Text = "Delete Plot";
+            deletePlotToolStripMenuItem.Size = new Size(180, 22);
+            deletePlotToolStripMenuItem.Text = "Delete All Plots";
             deletePlotToolStripMenuItem.Click += deletePlotToolStripMenuItem_Click;
             // 
             // clearAllPlotsToolStripMenuItem
             // 
             clearAllPlotsToolStripMenuItem.Name = "clearAllPlotsToolStripMenuItem";
-            clearAllPlotsToolStripMenuItem.Size = new Size(150, 22);
-            clearAllPlotsToolStripMenuItem.Text = "Clear All Plots";
+            clearAllPlotsToolStripMenuItem.Size = new Size(180, 22);
+            clearAllPlotsToolStripMenuItem.Text = "Clear Data";
             clearAllPlotsToolStripMenuItem.Click += clearAllPlotsToolStripMenuItem_Click;
+            // 
+            // hideAllPlotsToolStripMenuItem
+            // 
+            hideAllPlotsToolStripMenuItem.Name = "hideAllPlotsToolStripMenuItem";
+            hideAllPlotsToolStripMenuItem.Size = new Size(180, 22);
+            hideAllPlotsToolStripMenuItem.Text = "Hide All Plots";
+            hideAllPlotsToolStripMenuItem.Click += hideAllPlotsToolStripMenuItem_Click;
+            // 
+            // showAllPlotsToolStripMenuItem
+            // 
+            showAllPlotsToolStripMenuItem.Name = "showAllPlotsToolStripMenuItem";
+            showAllPlotsToolStripMenuItem.Size = new Size(180, 22);
+            showAllPlotsToolStripMenuItem.Text = "Show All Plots";
+            showAllPlotsToolStripMenuItem.Click += showAllPlotsToolStripMenuItem_Click;
             // 
             // algoTraderToolStripMenuItem
             // 
@@ -325,6 +341,8 @@
         private ToolStripMenuItem addPlotToolStripMenuItem;
         private ToolStripMenuItem deletePlotToolStripMenuItem;
         private ToolStripMenuItem clearAllPlotsToolStripMenuItem;
+        private ToolStripMenuItem hideAllPlotsToolStripMenuItem;
+        private ToolStripMenuItem showAllPlotsToolStripMenuItem;
         private ToolStripMenuItem algoTraderToolStripMenuItem;
         private ToolStripMenuItem initToolStripMenuItem;
         private ToolStripMenuItem startToolStripMenuItem;

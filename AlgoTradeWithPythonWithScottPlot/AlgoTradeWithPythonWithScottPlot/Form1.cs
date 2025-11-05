@@ -156,25 +156,22 @@ namespace AlgoTradeWithPythonWithScottPlot
 
         private void deletePlotToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var plotIds = guiManager.GetPlotIds().ToList();
-            if (plotIds.Count > 0)
-            {
-                // Delete the last created plot
-                string lastPlotId = plotIds.LastOrDefault();
-                if (!string.IsNullOrEmpty(lastPlotId))
-                {
-                    guiManager.DeletePlot(lastPlotId);
-                }
-            }
-            else
-            {
-                guiManager.UpdateStatus("No plots to delete");
-            }
+            guiManager.DeleteAllSecondaryPlots();
         }
 
         private void clearAllPlotsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             guiManager.ClearAllPlots();
+        }
+
+        private void hideAllPlotsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            guiManager.HideAllSecondaryPlots();
+        }
+
+        private void showAllPlotsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            guiManager.ShowAllSecondaryPlots();
         }
 
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
