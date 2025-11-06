@@ -2,6 +2,7 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 using ScottPlot.WinForms;
+using ScottPlot.Plottables;
 
 namespace AlgoTradeWithPythonWithScottPlot
 {
@@ -18,6 +19,9 @@ namespace AlgoTradeWithPythonWithScottPlot
         public DateTime CreatedAt { get; set; }
         public string Title { get; set; }
         public Color BackgroundColor { get; set; }
+
+        // Crosshair reference
+        public Crosshair Crosshair { get; set; }
 
         // Zoom control references
         public Button YZoomInButton { get; set; }

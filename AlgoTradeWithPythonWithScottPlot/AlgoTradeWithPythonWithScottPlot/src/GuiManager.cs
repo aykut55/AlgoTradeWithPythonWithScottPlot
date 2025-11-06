@@ -65,6 +65,7 @@ namespace AlgoTradeWithPythonWithScottPlot
         private CheckBox? syncMouseDragCheckBox;
         private CheckBox? syncAxisLimitsCheckBox;
         private CheckBox? enableScrollbarCheckBox;
+        private CheckBox? enableCrosshairCheckBox;
 
         // Throttling for real-time sync
         private DateTime lastMouseMoveSync = DateTime.MinValue;
@@ -715,6 +716,13 @@ namespace AlgoTradeWithPythonWithScottPlot
             plotInfo.Plot.MouseUp += (sender, e) => OnPlotMouseUp(plotInfo);
             plotInfo.Plot.MouseWheel += (sender, e) => OnPlotMouseWheel(plotInfo, e);
             plotInfo.Plot.MouseMove += (sender, e) => OnPlotMouseMove(plotInfo, e);
+
+            // Create crosshair (initially visible since default is enabled)
+            plotInfo.Crosshair = plotInfo.Plot.Plot.Add.Crosshair(0, 0);
+            plotInfo.Crosshair.IsVisible = true; // Default enabled
+            plotInfo.Crosshair.LineColor = ScottPlot.Colors.Red;
+            plotInfo.Crosshair.LineWidth = 1;
+
             plotInfo.Plot.Refresh();
         }
 
@@ -954,6 +962,47 @@ namespace AlgoTradeWithPythonWithScottPlot
         {
             try
             {
+                // Update crosshair position if it's visible
+                if (sourcePlot.Crosshair != null && sourcePlot.Crosshair.IsVisible)
+                {
+                    var coordinates = sourcePlot.Plot.Plot.GetCoordinates(e.X, e.Y);
+                    sourcePlot.Crosshair.Position = coordinates;
+
+                    // Sync crosshair to all other plots
+                    foreach (var plot in plots.Values)
+                    {
+                        if (plot.Id != sourcePlot.Id && plot.Crosshair != null && plot.Crosshair.IsVisible)
+                        {
+                            plot.Crosshair.Position = coordinates;
+                        }
+                    }
+
+                    // Refresh all plots to show crosshair at new position
+                    if (mainForm.InvokeRequired)
+                    {
+                        mainForm.Invoke(() =>
+                        {
+                            foreach (var plot in plots.Values)
+                            {
+                                if (plot.Crosshair != null && plot.Crosshair.IsVisible)
+                                {
+                                    plot.Plot.Refresh();
+                                }
+                            }
+                        });
+                    }
+                    else
+                    {
+                        foreach (var plot in plots.Values)
+                        {
+                            if (plot.Crosshair != null && plot.Crosshair.IsVisible)
+                            {
+                                plot.Plot.Refresh();
+                            }
+                        }
+                    }
+                }
+
                 // Check if real-time sync is enabled (either drag or pan)
                 bool syncDrag = syncMouseDragCheckBox?.Checked == true;
                 bool syncPan = syncPanCheckBox?.Checked == true;
@@ -1533,9 +1582,25 @@ namespace AlgoTradeWithPythonWithScottPlot
                 TabStop = false,
                 Visible = false
             };
-            
+
             // Add event handler for scrollbar checkbox
             enableScrollbarCheckBox.CheckedChanged += (sender, e) => UpdateScrollbarState();
+
+            // Enable Crosshair (third row, second column)
+            enableCrosshairCheckBox = new CheckBox
+            {
+                Name = "enableCrosshair",
+                Text = "Crosshair",
+                Size = new Size(checkBoxWidth, checkBoxHeight),
+                Location = new Point(startX + checkBoxWidth + margin, startY + 3 * (checkBoxHeight + margin)),
+                Anchor = AnchorStyles.Top | AnchorStyles.Left,
+                Checked = true, // Default enabled
+                Font = new Font("Arial", 7, FontStyle.Regular),
+                TabStop = false
+            };
+
+            // Add event handler for crosshair checkbox
+            enableCrosshairCheckBox.CheckedChanged += (sender, e) => UpdateCrosshairState();
 
             // Add checkboxes to pnlTop
             pnlTop.Controls.Add(syncZoomCheckBox);
@@ -1545,6 +1610,7 @@ namespace AlgoTradeWithPythonWithScottPlot
             pnlTop.Controls.Add(syncMouseDragCheckBox);
             pnlTop.Controls.Add(syncAxisLimitsCheckBox);
             pnlTop.Controls.Add(enableScrollbarCheckBox);
+            pnlTop.Controls.Add(enableCrosshairCheckBox);
 
             logger.Information("Sync checkboxes created and added to pnlTop");
             
@@ -1562,7 +1628,7 @@ namespace AlgoTradeWithPythonWithScottPlot
                     // The checkbox only controls mouse wheel scrolling, not manual scrollbar usage
                     if (mainForm.InvokeRequired)
                     {
-                        mainForm.Invoke(() => 
+                        mainForm.Invoke(() =>
                         {
                             pnlCenter.AutoScroll = true; // Always enabled for manual scrolling
                         });
@@ -1571,7 +1637,7 @@ namespace AlgoTradeWithPythonWithScottPlot
                     {
                         pnlCenter.AutoScroll = true; // Always enabled for manual scrolling
                     }
-                    
+
                     bool enableMouseWheelScroll = enableScrollbarCheckBox?.Checked == true;
                     logger.Debug($"Mouse wheel scrolling: {(enableMouseWheelScroll ? "Enabled" : "Disabled")} (manual scrollbar always enabled)");
                 }
@@ -1579,6 +1645,39 @@ namespace AlgoTradeWithPythonWithScottPlot
             catch (Exception ex)
             {
                 logger.Error($"Error updating scrollbar state: {ex.Message}");
+            }
+        }
+
+        private void UpdateCrosshairState()
+        {
+            try
+            {
+                bool enableCrosshair = enableCrosshairCheckBox?.Checked == true;
+
+                foreach (var plotInfo in plots.Values)
+                {
+                    if (plotInfo.Crosshair != null)
+                    {
+                        plotInfo.Crosshair.IsVisible = enableCrosshair;
+
+                        // Refresh the plot to show/hide crosshair
+                        if (mainForm.InvokeRequired)
+                        {
+                            mainForm.Invoke(() => plotInfo.Plot.Refresh());
+                        }
+                        else
+                        {
+                            plotInfo.Plot.Refresh();
+                        }
+                    }
+                }
+
+                logger.Debug($"Crosshair {(enableCrosshair ? "enabled" : "disabled")} for {plots.Count} plots");
+                UpdateStatus($"Crosshair {(enableCrosshair ? "açık" : "kapalı")}");
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"Error updating crosshair state: {ex.Message}");
             }
         }
 
@@ -2306,6 +2405,7 @@ namespace AlgoTradeWithPythonWithScottPlot
                 syncMouseDragCheckBox?.Dispose();
                 syncAxisLimitsCheckBox?.Dispose();
                 enableScrollbarCheckBox?.Dispose();
+                enableCrosshairCheckBox?.Dispose();
                 
                 // Clear event subscriptions
                 InitRequested = null;
