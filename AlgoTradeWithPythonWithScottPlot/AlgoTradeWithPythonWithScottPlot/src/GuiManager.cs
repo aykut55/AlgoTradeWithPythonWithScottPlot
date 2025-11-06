@@ -390,6 +390,13 @@ namespace AlgoTradeWithPythonWithScottPlot
                 plotInfo.Container.Controls.Add(plotInfo.ResetXButton);
                 plotInfo.Container.Controls.Add(plotInfo.ResetYButton);
                 plotInfo.Container.Controls.Add(plotInfo.CopyToAllButton);
+                
+                // Add Close and Maximize buttons only for non-Plot0
+                if (!isMainPlot)
+                {
+                    plotInfo.Container.Controls.Add(plotInfo.CloseButton);
+                    plotInfo.Container.Controls.Add(plotInfo.MaximizeButton);
+                }
 
                 // Add container to parent panel (default: pnlCenter)
                 Panel parent = parentPanel ?? pnlCenter;
@@ -417,6 +424,9 @@ namespace AlgoTradeWithPythonWithScottPlot
 
                 // Store plot info
                 plots[id] = plotInfo;
+
+                // Reset Plot0 to normal size when adding a new plot (if it was auto-maximized)
+                CheckAndRestorePlot0();
 
                 // Convert main plot to fixed height when adding the second plot (Plot_1)
                 if (plots.Count == 2 && plots.ContainsKey(MAIN_PLOT_ID) && !isMainPlot)
@@ -539,15 +549,18 @@ namespace AlgoTradeWithPythonWithScottPlot
                 Font = new Font("Arial", 10, FontStyle.Bold)
             };
 
-            // X-axis controls (top right, horizontal stack)
-            int xStartX = plotInfo.Container.Width - (4 * buttonSize + 4 * margin);
+            // X-axis controls positioning: Close, Maximize, gap, then X controls
+            // Calculate positions for: Close(1) + Maximize(1) + gap(1) + X controls(4) = 7 positions
+            bool isMainPlot = plotInfo.Id == "0";
+            int totalButtons = isMainPlot ? 4 : 7; // Main plot has no Close/Maximize buttons
+            int xStartX = plotInfo.Container.Width - (totalButtons * buttonSize + totalButtons * margin);
             
             plotInfo.XPanLeftButton = new Button
             {
                 Name = $"btnXPanLeft_{plotInfo.Id}",
                 Text = "←",
                 Size = new Size(buttonSize, buttonSize),
-                Location = new Point(xStartX, margin),
+                Location = new Point(xStartX + 0 * (buttonSize + margin), margin),
                 Anchor = AnchorStyles.Top | AnchorStyles.Right,
                 BackColor = Color.LightGreen,
                 ForeColor = Color.Black,
@@ -559,7 +572,7 @@ namespace AlgoTradeWithPythonWithScottPlot
                 Name = $"btnXZoomIn_{plotInfo.Id}",
                 Text = "X+",
                 Size = new Size(buttonSize, buttonSize),
-                Location = new Point(xStartX + buttonSize + margin, margin),
+                Location = new Point(xStartX + 1 * (buttonSize + margin), margin),
                 Anchor = AnchorStyles.Top | AnchorStyles.Right,
                 BackColor = Color.LightGreen,
                 ForeColor = Color.Black,
@@ -604,6 +617,36 @@ namespace AlgoTradeWithPythonWithScottPlot
                 ForeColor = Color.Black,
                 Font = new Font("Arial", 7, FontStyle.Bold)
             };
+
+            // Create Close and Maximize buttons only for non-Plot0
+            if (!isMainPlot)
+            {
+                // Close button (en sağda - position 6)
+                plotInfo.CloseButton = new Button
+                {
+                    Name = $"btnClose_{plotInfo.Id}",
+                    Text = "✕",
+                    Size = new Size(buttonSize, buttonSize),
+                    Location = new Point(xStartX + 6 * (buttonSize + margin), margin),
+                    Anchor = AnchorStyles.Right,
+                    BackColor = Color.Red,
+                    ForeColor = Color.White,
+                    Font = new Font("Arial", 10, FontStyle.Bold)
+                };
+
+                // Maximize button (close'un solunda - position 5)
+                plotInfo.MaximizeButton = new Button
+                {
+                    Name = $"btnMaximize_{plotInfo.Id}",
+                    Text = "⬜",
+                    Size = new Size(buttonSize, buttonSize),
+                    Location = new Point(xStartX + 5 * (buttonSize + margin), margin),
+                    Anchor = AnchorStyles.Right,
+                    BackColor = Color.DarkBlue,
+                    ForeColor = Color.White,
+                    Font = new Font("Arial", 10, FontStyle.Bold)
+                };
+            }
 
             plotInfo.ResetButton = new Button
             {
@@ -660,6 +703,13 @@ namespace AlgoTradeWithPythonWithScottPlot
 
             // Add event handler for copy to all functionality
             plotInfo.CopyToAllButton.Click += (sender, e) => CopyPlotSettingsToAll(plotInfo);
+
+            // Add event handlers for plot management (only for non-Plot0)
+            if (!isMainPlot)
+            {
+                plotInfo.CloseButton.Click += (sender, e) => ClosePlot(plotInfo);
+                plotInfo.MaximizeButton.Click += (sender, e) => ToggleMaximizePlot(plotInfo);
+            }
 
             // Add mouse synchronization event handlers
             plotInfo.Plot.MouseUp += (sender, e) => OnPlotMouseUp(plotInfo);
@@ -1694,6 +1744,230 @@ namespace AlgoTradeWithPythonWithScottPlot
             catch (Exception ex)
             {
                 logger.Error($"Error copying plot settings: {ex.Message}");
+            }
+        }
+
+        private void ClosePlot(PlotInfo plotInfo)
+        {
+            try
+            {
+                if (plotInfo == null)
+                {
+                    logger.Warning("Cannot close null plot");
+                    return;
+                }
+
+                // Plot0 cannot be closed
+                if (plotInfo.Id == "0")
+                {
+                    logger.Information("Plot0 cannot be closed");
+                    UpdateStatus("Plot0 kapatılamaz");
+                    return;
+                }
+
+                logger.Information($"Closing plot {plotInfo.Id}");
+
+                // Remove from plots dictionary
+                if (plots.TryRemove(plotInfo.Id, out _))
+                {
+                    // Remove from parent panel
+                    if (plotInfo.Container?.Parent != null)
+                    {
+                        if (mainForm.InvokeRequired)
+                        {
+                            mainForm.Invoke(() => plotInfo.Container.Parent.Controls.Remove(plotInfo.Container));
+                        }
+                        else
+                        {
+                            plotInfo.Container.Parent.Controls.Remove(plotInfo.Container);
+                        }
+                    }
+
+                    // Dispose plot resources
+                    plotInfo.Dispose();
+
+                    UpdateStatus($"Plot {plotInfo.Id} closed");
+                    logger.Information($"Plot {plotInfo.Id} closed and disposed successfully");
+                    
+                    // Check if only Plot0 remains and auto-maximize it
+                    CheckAndAutoMaximizePlot0();
+                }
+                else
+                {
+                    logger.Warning($"Plot {plotInfo.Id} not found in plots dictionary");
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"Error closing plot {plotInfo?.Id}: {ex.Message}");
+            }
+        }
+
+        private bool isMaximized = false;
+        private string? maximizedPlotId = null;
+        private readonly List<PlotInfo> hiddenPlots = new List<PlotInfo>();
+
+        private void ToggleMaximizePlot(PlotInfo plotInfo)
+        {
+            try
+            {
+                if (plotInfo == null)
+                {
+                    logger.Warning("Cannot maximize null plot");
+                    return;
+                }
+
+                if (!isMaximized)
+                {
+                    // Maximize this plot - hide all others except plot0
+                    maximizedPlotId = plotInfo.Id;
+                    hiddenPlots.Clear();
+
+                    foreach (var plot in plots.Values)
+                    {
+                        if (plot.Id != plotInfo.Id && plot.Id != "0")
+                        {
+                            if (plot.Container != null && plot.Container.Visible)
+                            {
+                                hiddenPlots.Add(plot);
+                                if (mainForm.InvokeRequired)
+                                {
+                                    mainForm.Invoke(() => plot.Container.Visible = false);
+                                }
+                                else
+                                {
+                                    plot.Container.Visible = false;
+                                }
+                            }
+                        }
+                    }
+
+                    isMaximized = true;
+                    plotInfo.MaximizeButton.Text = "🗗"; // Restore icon
+                    plotInfo.MaximizeButton.BackColor = Color.DarkGreen;
+                    
+                    UpdateStatus($"Plot {plotInfo.Id} maximized");
+                    logger.Information($"Plot {plotInfo.Id} maximized, {hiddenPlots.Count} plots hidden");
+                }
+                else
+                {
+                    // Restore all hidden plots
+                    foreach (var plot in hiddenPlots)
+                    {
+                        if (plot.Container != null)
+                        {
+                            if (mainForm.InvokeRequired)
+                            {
+                                mainForm.Invoke(() => plot.Container.Visible = true);
+                            }
+                            else
+                            {
+                                plot.Container.Visible = true;
+                            }
+                        }
+                    }
+
+                    // Reset all maximize buttons
+                    foreach (var plot in plots.Values)
+                    {
+                        if (plot.MaximizeButton != null)
+                        {
+                            plot.MaximizeButton.Text = "⬜";
+                            plot.MaximizeButton.BackColor = Color.DarkBlue;
+                        }
+                    }
+
+                    isMaximized = false;
+                    maximizedPlotId = null;
+                    hiddenPlots.Clear();
+                    
+                    UpdateStatus("All plots restored");
+                    logger.Information("All plots restored to normal view");
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"Error toggling maximize for plot {plotInfo?.Id}: {ex.Message}");
+            }
+        }
+
+        private void CheckAndAutoMaximizePlot0()
+        {
+            try
+            {
+                // Count visible plots (only Plot0 should remain)
+                var visiblePlots = plots.Values.Where(p => p.Container?.Visible == true).ToList();
+                
+                if (visiblePlots.Count == 1 && visiblePlots[0].Id == "0")
+                {
+                    // Only Plot0 remains - auto-maximize it by hiding panels/controls if needed
+                    var plot0 = plots.Values.FirstOrDefault(p => p.Id == "0");
+                    if (plot0?.Container != null)
+                    {
+                        // Ensure Plot0 is visible and maximized
+                        if (mainForm.InvokeRequired)
+                        {
+                            mainForm.Invoke(() =>
+                            {
+                                plot0.Container.Dock = DockStyle.Fill;
+                                plot0.Container.BringToFront();
+                            });
+                        }
+                        else
+                        {
+                            plot0.Container.Dock = DockStyle.Fill;
+                            plot0.Container.BringToFront();
+                        }
+                        
+                        // Reset any maximize state
+                        isMaximized = false;
+                        maximizedPlotId = null;
+                        hiddenPlots.Clear();
+                        
+                        UpdateStatus("Plot0 auto-maximized - only plot remaining");
+                        logger.Information("Plot0 auto-maximized as it's the only remaining plot");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"Error in CheckAndAutoMaximizePlot0: {ex.Message}");
+            }
+        }
+
+        private void CheckAndRestorePlot0()
+        {
+            try
+            {
+                // If there are multiple plots now, ensure Plot0 returns to normal layout
+                if (plots.Count > 1)
+                {
+                    var plot0 = plots.Values.FirstOrDefault(p => p.Id == "0");
+                    if (plot0?.Container != null)
+                    {
+                        // Restore Plot0 to normal size (not full dock)
+                        if (mainForm.InvokeRequired)
+                        {
+                            mainForm.Invoke(() =>
+                            {
+                                // Reset to DockStyle.Top with fixed height
+                                plot0.Container.Dock = DockStyle.Top;
+                                plot0.Container.Height = MAIN_PLOT_HEIGHT;
+                            });
+                        }
+                        else
+                        {
+                            plot0.Container.Dock = DockStyle.Top;
+                            plot0.Container.Height = MAIN_PLOT_HEIGHT;
+                        }
+                        
+                        logger.Information("Plot0 restored to normal size - multiple plots now exist");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"Error in CheckAndRestorePlot0: {ex.Message}");
             }
         }
 

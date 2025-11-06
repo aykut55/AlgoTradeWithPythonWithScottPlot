@@ -38,6 +38,10 @@ namespace AlgoTradeWithPythonWithScottPlot
 
         // Copy to all control reference
         public Button CopyToAllButton { get; set; }
+        
+        // Plot management buttons
+        public Button CloseButton { get; set; }
+        public Button MaximizeButton { get; set; }
 
         private bool disposed = false;
 
@@ -84,6 +88,10 @@ namespace AlgoTradeWithPythonWithScottPlot
 
                 // Dispose copy to all button
                 CopyToAllButton?.Dispose();
+                
+                // Dispose plot management buttons
+                CloseButton?.Dispose();
+                MaximizeButton?.Dispose();
 
                 Container?.Dispose();
                 disposed = true;

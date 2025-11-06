@@ -24,10 +24,8 @@ namespace AlgoTradeWithPythonWithScottPlot
             
             logger.Information("Form1 initialized successfully");
             
-            // Initial status
-            btnToggleLogs.Text = "Hide Logs";
-            showLogsToolStripMenuItem.Text = "Hide Logs";
-            guiManager.UpdateStatus("Application started - Log panel visible");
+            // Initial status (button text will be set by GuiManager.UpdateLogPanelButtonText)
+            guiManager.UpdateStatus("Application started");
         }
 
         private void Form1_Load(object sender, EventArgs e)
