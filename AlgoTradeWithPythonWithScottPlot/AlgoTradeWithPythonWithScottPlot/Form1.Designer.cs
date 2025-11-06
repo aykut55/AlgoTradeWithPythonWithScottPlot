@@ -47,6 +47,14 @@
             resetToolStripMenuItem = new ToolStripMenuItem();
             terminateToolStripMenuItem = new ToolStripMenuItem();
             pnlTop = new Panel();
+            txtPoints = new TextBox();
+            lblPoints = new Label();
+            txtFrequency = new TextBox();
+            lblFrequency = new Label();
+            txtAmplitude = new TextBox();
+            lblAmplitude = new Label();
+            btnLoadData = new Button();
+            btnClearData = new Button();
             btnClearLogs = new Button();
             btnToggleLogs = new Button();
             pnlLeft = new Panel();
@@ -97,14 +105,14 @@
             // showLogsToolStripMenuItem
             // 
             showLogsToolStripMenuItem.Name = "showLogsToolStripMenuItem";
-            showLogsToolStripMenuItem.Size = new Size(180, 22);
+            showLogsToolStripMenuItem.Size = new Size(131, 22);
             showLogsToolStripMenuItem.Text = "Show Logs";
             showLogsToolStripMenuItem.Click += showLogsToolStripMenuItem_Click;
             // 
             // clearLogsToolStripMenuItem
             // 
             clearLogsToolStripMenuItem.Name = "clearLogsToolStripMenuItem";
-            clearLogsToolStripMenuItem.Size = new Size(180, 22);
+            clearLogsToolStripMenuItem.Size = new Size(131, 22);
             clearLogsToolStripMenuItem.Text = "Clear Logs";
             clearLogsToolStripMenuItem.Click += clearLogsToolStripMenuItem_Click;
             // 
@@ -195,6 +203,14 @@
             // pnlTop
             // 
             pnlTop.BackColor = Color.LightGray;
+            pnlTop.Controls.Add(txtPoints);
+            pnlTop.Controls.Add(lblPoints);
+            pnlTop.Controls.Add(txtFrequency);
+            pnlTop.Controls.Add(lblFrequency);
+            pnlTop.Controls.Add(txtAmplitude);
+            pnlTop.Controls.Add(lblAmplitude);
+            pnlTop.Controls.Add(btnLoadData);
+            pnlTop.Controls.Add(btnClearData);
             pnlTop.Controls.Add(btnClearLogs);
             pnlTop.Controls.Add(btnToggleLogs);
             pnlTop.Dock = DockStyle.Top;
@@ -202,6 +218,77 @@
             pnlTop.Name = "pnlTop";
             pnlTop.Size = new Size(1415, 127);
             pnlTop.TabIndex = 0;
+            // 
+            // txtPoints
+            // 
+            txtPoints.Location = new Point(685, 96);
+            txtPoints.Name = "txtPoints";
+            txtPoints.Size = new Size(80, 23);
+            txtPoints.TabIndex = 9;
+            txtPoints.Text = "1000";
+            // 
+            // lblPoints
+            // 
+            lblPoints.AutoSize = true;
+            lblPoints.Location = new Point(608, 99);
+            lblPoints.Name = "lblPoints";
+            lblPoints.Size = new Size(43, 15);
+            lblPoints.TabIndex = 8;
+            lblPoints.Text = "Points:";
+            // 
+            // txtFrequency
+            // 
+            txtFrequency.Location = new Point(685, 66);
+            txtFrequency.Name = "txtFrequency";
+            txtFrequency.Size = new Size(80, 23);
+            txtFrequency.TabIndex = 7;
+            txtFrequency.Text = "2.0";
+            // 
+            // lblFrequency
+            // 
+            lblFrequency.AutoSize = true;
+            lblFrequency.Location = new Point(608, 69);
+            lblFrequency.Name = "lblFrequency";
+            lblFrequency.Size = new Size(65, 15);
+            lblFrequency.TabIndex = 6;
+            lblFrequency.Text = "Frequency:";
+            // 
+            // txtAmplitude
+            // 
+            txtAmplitude.Location = new Point(685, 30);
+            txtAmplitude.Name = "txtAmplitude";
+            txtAmplitude.Size = new Size(80, 23);
+            txtAmplitude.TabIndex = 5;
+            txtAmplitude.Text = "10.0";
+            // 
+            // lblAmplitude
+            // 
+            lblAmplitude.AutoSize = true;
+            lblAmplitude.Location = new Point(608, 33);
+            lblAmplitude.Name = "lblAmplitude";
+            lblAmplitude.Size = new Size(66, 15);
+            lblAmplitude.TabIndex = 4;
+            lblAmplitude.Text = "Amplitude:";
+            // 
+            // btnLoadData
+            // 
+            btnLoadData.Location = new Point(502, 63);
+            btnLoadData.Name = "btnLoadData";
+            btnLoadData.Size = new Size(100, 30);
+            btnLoadData.TabIndex = 3;
+            btnLoadData.Text = "Load Data";
+            btnLoadData.UseVisualStyleBackColor = true;
+            btnLoadData.Click += btnLoadData_Click;
+            // 
+            // btnClearData
+            // 
+            btnClearData.Location = new Point(502, 27);
+            btnClearData.Name = "btnClearData";
+            btnClearData.Size = new Size(100, 30);
+            btnClearData.TabIndex = 2;
+            btnClearData.Text = "Clear Data";
+            btnClearData.UseVisualStyleBackColor = true;
+            btnClearData.Click += btnClearData_Click;
             // 
             // btnClearLogs
             // 
@@ -322,6 +409,7 @@
             menuStrip1.ResumeLayout(false);
             menuStrip1.PerformLayout();
             pnlTop.ResumeLayout(false);
+            pnlTop.PerformLayout();
             statusStrip1.ResumeLayout(false);
             statusStrip1.PerformLayout();
             pnlBottom.ResumeLayout(false);
@@ -354,6 +442,14 @@
         private Panel pnlTop;
         private Button btnToggleLogs;
         private Button btnClearLogs;
+        private Button btnClearData;
+        private Button btnLoadData;
+        private Label lblAmplitude;
+        private TextBox txtAmplitude;
+        private Label lblFrequency;
+        private TextBox txtFrequency;
+        private Label lblPoints;
+        private TextBox txtPoints;
         private Panel pnlLeft;
         private Panel pnlRight;
         private Panel pnlCenter;

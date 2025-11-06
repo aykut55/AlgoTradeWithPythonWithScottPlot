@@ -139,7 +139,8 @@ namespace AlgoTradeWithPythonWithScottPlot
                         x[i] = i * 0.05; // Wider X range (0 to 50)
                         y[i] = Math.Sin(x[i] * 0.5) + 0.3 * Math.Sin(x[i] * 3) + 0.1 * random.NextDouble(); // Complex wave with noise
                     }
-                    plot.Plot.Add.Scatter(x, y);
+                    var scatter = plot.Plot.Add.Scatter(x, y);
+                    scatter.Color = ScottPlot.Colors.Blue; // Professional blue color
                     // Clean up the ID for display: "0" -> "Plot 0", "Plot_1" -> "Plot 1"
                     string displayName = createdId.StartsWith("Plot_") ? 
                         $"Plot {createdId.Substring(5)}" : 
@@ -170,6 +171,36 @@ namespace AlgoTradeWithPythonWithScottPlot
         private void showAllPlotsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             guiManager.ShowAllSecondaryPlots();
+        }
+
+        private void btnClearData_Click(object sender, EventArgs e)
+        {
+            guiManager.ClearAllPlots();
+        }
+
+        private void btnLoadData_Click(object sender, EventArgs e)
+        {
+            // Parse input values
+            if (!double.TryParse(txtAmplitude.Text, out double amplitude))
+            {
+                amplitude = 1.0;
+                txtAmplitude.Text = "1.0";
+            }
+
+            if (!double.TryParse(txtFrequency.Text, out double frequency))
+            {
+                frequency = 1.0;
+                txtFrequency.Text = "1.0";
+            }
+
+            if (!int.TryParse(txtPoints.Text, out int points))
+            {
+                points = 1000;
+                txtPoints.Text = "1000";
+            }
+
+            // Generate and load sine wave data to all plots
+            guiManager.LoadSineWaveData(amplitude, frequency, points);
         }
 
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)

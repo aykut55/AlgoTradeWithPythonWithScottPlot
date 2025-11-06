@@ -6,8 +6,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Serilog;
 using ScottPlot.WinForms;
+using Serilog;
+using SPColors = ScottPlot.Colors;
 
 namespace AlgoTradeWithPythonWithScottPlot
 {
@@ -720,7 +721,7 @@ namespace AlgoTradeWithPythonWithScottPlot
             // Create crosshair (initially visible since default is enabled)
             plotInfo.Crosshair = plotInfo.Plot.Plot.Add.Crosshair(0, 0);
             plotInfo.Crosshair.IsVisible = true; // Default enabled
-            plotInfo.Crosshair.LineColor = ScottPlot.Colors.Red;
+            plotInfo.Crosshair.LineColor = SPColors.Red;
             plotInfo.Crosshair.LineWidth = 1;
 
             plotInfo.Plot.Refresh();
@@ -2242,16 +2243,108 @@ namespace AlgoTradeWithPythonWithScottPlot
                 {
                     if (mainForm.InvokeRequired)
                     {
-                        mainForm.Invoke(() => plotInfo.Plot.Plot.Clear());
+                        mainForm.Invoke(() =>
+                        {
+                            plotInfo.Plot.Plot.Clear();
+
+                            // Recreate crosshair after clear
+                            plotInfo.Crosshair = plotInfo.Plot.Plot.Add.Crosshair(0, 0);
+                            plotInfo.Crosshair.IsVisible = enableCrosshairCheckBox?.Checked ?? true;
+                            plotInfo.Crosshair.LineColor = SPColors.Red;
+                            plotInfo.Crosshair.LineWidth = 1;
+
+                            plotInfo.Plot.Refresh();
+                        });
                     }
                     else
                     {
                         plotInfo.Plot.Plot.Clear();
+
+                        // Recreate crosshair after clear
+                        plotInfo.Crosshair = plotInfo.Plot.Plot.Add.Crosshair(0, 0);
+                        plotInfo.Crosshair.IsVisible = enableCrosshairCheckBox?.Checked ?? true;
+                        plotInfo.Crosshair.LineColor = SPColors.Red;
+                        plotInfo.Crosshair.LineWidth = 1;
+
+                        plotInfo.Plot.Refresh();
                     }
                 }
             }
             logger.Information("All plot data cleared");
             UpdateStatus("All plot data cleared");
+        }
+
+        public void LoadSineWaveData(double amplitude, double frequency, int points)
+        {
+            try
+            {
+                logger.Information($"Loading sine wave data: amplitude={amplitude}, frequency={frequency}, points={points}");
+
+                // Generate sine wave data
+                double[] x = new double[points];
+                double[] y = new double[points];
+
+                for (int i = 0; i < points; i++)
+                {
+                    x[i] = i * 0.01; // X spacing
+                    y[i] = amplitude * Math.Sin(2 * Math.PI * frequency * x[i]);
+                }
+
+                // Apply data to all plots
+                foreach (var plotInfo in plots.Values)
+                {
+                    if (plotInfo.Plot != null)
+                    {
+                        if (mainForm.InvokeRequired)
+                        {
+                            mainForm.Invoke(() =>
+                            {
+                                plotInfo.Plot.Plot.Clear();
+
+                                // Add scatter plot
+                                var scatter = plotInfo.Plot.Plot.Add.Scatter(x, y);
+                                scatter.Color = SPColors.Blue; // Professional blue color
+                                scatter.LineWidth = 1.5f;
+
+                                // Recreate crosshair after clear
+                                plotInfo.Crosshair = plotInfo.Plot.Plot.Add.Crosshair(0, 0);
+                                plotInfo.Crosshair.IsVisible = enableCrosshairCheckBox?.Checked ?? true;
+                                plotInfo.Crosshair.LineColor = SPColors.Red;
+                                plotInfo.Crosshair.LineWidth = 1;
+
+                                plotInfo.Plot.Plot.Axes.AutoScale();
+                                plotInfo.Plot.Refresh();
+                            });
+                        }
+                        else
+                        {
+                            plotInfo.Plot.Plot.Clear();
+
+                            // Add scatter plot
+                            var scatter = plotInfo.Plot.Plot.Add.Scatter(x, y);
+                            scatter.Color = SPColors.Blue; // Professional blue color
+                            scatter.LineWidth = 1.5f;
+
+                            // Recreate crosshair after clear
+                            plotInfo.Crosshair = plotInfo.Plot.Plot.Add.Crosshair(0, 0);
+                            plotInfo.Crosshair.IsVisible = enableCrosshairCheckBox?.Checked ?? true;
+                            plotInfo.Crosshair.LineColor = SPColors.Red;
+                            plotInfo.Crosshair.LineWidth = 1;
+
+                            plotInfo.Plot.Plot.Axes.AutoScale();
+                            plotInfo.Plot.Refresh();
+                        }
+                    }
+                }
+
+                logger.Information($"Sine wave data loaded to {plots.Count} plots successfully");
+                UpdateStatus($"Loaded sine wave: A={amplitude}, F={frequency}, N={points} points");
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"Error loading sine wave data: {ex.Message}");
+                UpdateStatus("Error loading data");
+            }
         }
 
         public void DeleteAllSecondaryPlots()
