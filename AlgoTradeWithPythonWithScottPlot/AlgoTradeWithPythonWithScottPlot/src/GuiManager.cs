@@ -1492,78 +1492,91 @@ namespace AlgoTradeWithPythonWithScottPlot
             int startX = margin;
             int startY = margin;
 
-            // Sync Zoom
+            // Sync Zoom (position 0)
             syncZoomCheckBox = new CheckBox
             {
                 Name = "syncZoom",
                 Text = "Zoom",
                 Size = new Size(checkBoxWidth, checkBoxHeight),
-                Location = new Point(startX, startY),
+                Location = new Point(startX + 0 * (checkBoxWidth + margin), startY),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left,
                 Checked = true, // Default enabled
                 Font = new Font("Arial", 7, FontStyle.Regular),
                 TabStop = false
             };
 
-            // Sync Pan
+            // Sync Pan (position 1)
             syncPanCheckBox = new CheckBox
             {
                 Name = "syncPan",
                 Text = "Pan",
                 Size = new Size(checkBoxWidth, checkBoxHeight),
-                Location = new Point(startX + checkBoxWidth + margin, startY),
+                Location = new Point(startX + 1 * (checkBoxWidth + margin), startY),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left,
                 Checked = true, // Default enabled
                 Font = new Font("Arial", 7, FontStyle.Regular),
                 TabStop = false
             };
 
-            // Sync Mouse Wheel (second row)
+            // Sync Mouse Wheel (position 2)
             syncMouseWheelCheckBox = new CheckBox
             {
                 Name = "syncMouseWheel",
                 Text = "Wheel",
                 Size = new Size(checkBoxWidth, checkBoxHeight),
-                Location = new Point(startX, startY + checkBoxHeight + margin),
+                Location = new Point(startX + 2 * (checkBoxWidth + margin), startY),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left,
                 Checked = true, // Default enabled
                 Font = new Font("Arial", 7, FontStyle.Regular),
                 TabStop = false
             };
 
-            // Sync Reset
+            // Sync Reset (position 3)
             syncResetCheckBox = new CheckBox
             {
                 Name = "syncReset",
                 Text = "Reset",
                 Size = new Size(checkBoxWidth, checkBoxHeight),
-                Location = new Point(startX + checkBoxWidth + margin, startY + checkBoxHeight + margin),
+                Location = new Point(startX + 3 * (checkBoxWidth + margin), startY),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left,
                 Checked = true, // Default enabled
                 Font = new Font("Arial", 7, FontStyle.Regular),
                 TabStop = false
             };
 
-            // Sync Mouse Drag (third row)
+            // Sync Mouse Drag (position 4)
             syncMouseDragCheckBox = new CheckBox
             {
                 Name = "syncMouseDrag",
                 Text = "Drag",
                 Size = new Size(checkBoxWidth, checkBoxHeight),
-                Location = new Point(startX, startY + 2 * (checkBoxHeight + margin)),
+                Location = new Point(startX + 4 * (checkBoxWidth + margin), startY),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left,
                 Checked = true, // Default enabled
                 Font = new Font("Arial", 7, FontStyle.Regular),
                 TabStop = false
             };
 
-            // Sync Axis Limits
+            // Enable Crosshair (position 5)
+            enableCrosshairCheckBox = new CheckBox
+            {
+                Name = "enableCrosshair",
+                Text = "Crosshair",
+                Size = new Size(checkBoxWidth, checkBoxHeight),
+                Location = new Point(startX + 5 * (checkBoxWidth + margin), startY),
+                Anchor = AnchorStyles.Top | AnchorStyles.Left,
+                Checked = true, // Default enabled
+                Font = new Font("Arial", 7, FontStyle.Regular),
+                TabStop = false
+            };
+
+            // Sync Axis Limits (position 6 - HIDDEN)
             syncAxisLimitsCheckBox = new CheckBox
             {
                 Name = "syncAxisLimits",
                 Text = "Limits",
                 Size = new Size(checkBoxWidth, checkBoxHeight),
-                Location = new Point(startX + checkBoxWidth + margin, startY + 2 * (checkBoxHeight + margin)),
+                Location = new Point(startX + 6 * (checkBoxWidth + margin), startY),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left,
                 Checked = false, // Default disabled
                 Font = new Font("Arial", 7, FontStyle.Regular),
@@ -1571,13 +1584,13 @@ namespace AlgoTradeWithPythonWithScottPlot
                 Visible = false
             };
 
-            // Enable Mouse Wheel Scrolling (third row)
+            // Enable Mouse Wheel Scrolling (position 7 - HIDDEN)
             enableScrollbarCheckBox = new CheckBox
             {
                 Name = "enableMouseWheelScroll",
                 Text = "Scrollbar",
                 Size = new Size(checkBoxWidth, checkBoxHeight),
-                Location = new Point(startX, startY + 3 * (checkBoxHeight + margin)),
+                Location = new Point(startX + 7 * (checkBoxWidth + margin), startY),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left,
                 Checked = false, // Default disabled - mouse wheel scrolling off
                 Font = new Font("Arial", 7, FontStyle.Regular),
@@ -1587,19 +1600,6 @@ namespace AlgoTradeWithPythonWithScottPlot
 
             // Add event handler for scrollbar checkbox
             enableScrollbarCheckBox.CheckedChanged += (sender, e) => UpdateScrollbarState();
-
-            // Enable Crosshair (third row, second column)
-            enableCrosshairCheckBox = new CheckBox
-            {
-                Name = "enableCrosshair",
-                Text = "Crosshair",
-                Size = new Size(checkBoxWidth, checkBoxHeight),
-                Location = new Point(startX + checkBoxWidth + margin, startY + 3 * (checkBoxHeight + margin)),
-                Anchor = AnchorStyles.Top | AnchorStyles.Left,
-                Checked = true, // Default enabled
-                Font = new Font("Arial", 7, FontStyle.Regular),
-                TabStop = false
-            };
 
             // Add event handler for crosshair checkbox
             enableCrosshairCheckBox.CheckedChanged += (sender, e) => UpdateCrosshairState();
