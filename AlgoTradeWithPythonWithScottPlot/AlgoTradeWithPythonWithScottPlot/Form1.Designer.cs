@@ -225,7 +225,7 @@
             txtPoints.Name = "txtPoints";
             txtPoints.Size = new Size(80, 23);
             txtPoints.TabIndex = 9;
-            txtPoints.Text = "1000";
+            txtPoints.Text = "1001";
             // 
             // lblPoints
             // 
@@ -242,7 +242,7 @@
             txtFrequency.Name = "txtFrequency";
             txtFrequency.Size = new Size(80, 23);
             txtFrequency.TabIndex = 7;
-            txtFrequency.Text = "2.0";
+            txtFrequency.Text = "0.01";
             // 
             // lblFrequency
             // 
