@@ -9,6 +9,7 @@ using System.Windows.Forms;
 using ScottPlot.WinForms;
 using Serilog;
 using SPColors = ScottPlot.Colors;
+using SPGenerate = ScottPlot.Generate;
 
 namespace AlgoTradeWithPythonWithScottPlot
 {
@@ -2276,18 +2277,55 @@ namespace AlgoTradeWithPythonWithScottPlot
 
         public void LoadSineWaveData(double amplitude, double frequency, int points)
         {
+            int methodId = 1; // 0: Normal for loop, 1: Parallel.For, 2: ScottPlot Generate
+            double[]? x = null;
+            double[]? y = null;
+
             try
             {
                 logger.Information($"Loading sine wave data: amplitude={amplitude}, frequency={frequency}, points={points}");
 
-                // Generate sine wave data
-                double[] x = new double[points];
-                double[] y = new double[points];
-
-                for (int i = 0; i < points; i++)
+                if (methodId == 0)
                 {
-                    x[i] = i * 0.01; // X spacing
-                    y[i] = amplitude * Math.Sin(2 * Math.PI * frequency * x[i]);
+                    logger.Information("Using Normal for loop to generate sine wave data");
+
+                    // Generate sine wave data
+                    x = new double[points];
+                    y = new double[points];
+
+                    // Normal for döngüsü kullanarak
+                    for (int i = 0; i < points; i++)
+                    {
+                        x[i] = i * 0.01; // X spacing
+                        y[i] = amplitude * Math.Sin(2 * Math.PI * frequency * x[i]);
+                    }
+                }
+                else if (methodId == 1)
+                {
+                    logger.Information("Using Parallel.For to generate sine wave data");
+
+                    // Generate sine wave data
+                    x = new double[points];
+                    y = new double[points];
+
+                    // Parallel.For kullanarak
+                    Parallel.For(0, points, i =>
+                    {
+                        x[i] = i * 0.01;
+                        y[i] = amplitude * Math.Sin(2 * Math.PI * frequency * x[i]);
+                    });
+                }
+                else if (methodId == 2)
+                {
+                    logger.Information("Using ScottPlot Generate methods to generate sine wave data");
+
+                    // Generate sine wave data using ScottPlot Generate
+                    x = SPGenerate.Consecutive(points);
+                    y = SPGenerate.Sin(points, mult: amplitude, oscillations: frequency);
+                }
+                else
+                {
+                    throw new InvalidOperationException($"Invalid methodId: {methodId}");
                 }
 
                 // Apply data to all plots
