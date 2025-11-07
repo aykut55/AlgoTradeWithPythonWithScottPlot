@@ -130,25 +130,20 @@ namespace AlgoTradeWithPythonWithScottPlot
                 var plot = guiManager.GetPlot(createdId);
                 if (plot != null)
                 {
-                    // Sample sine wave with more data points for better pan visibility
-                    double[] x = new double[1000];
-                    double[] y = new double[1000];
-                    var random = new Random();
-                    for (int i = 0; i < 1000; i++)
-                    {
-                        x[i] = i * 0.05; // Wider X range (0 to 50)
-                        y[i] = Math.Sin(x[i] * 0.5) + 0.3 * Math.Sin(x[i] * 3) + 0.1 * random.NextDouble(); // Complex wave with noise
-                    }
+                    // Generate data using DataManager (idx = 0: Complex wave with noise)
+                    var (x, y) = DataManager.GenerateData(idx: 0, points: 1000);
+
                     var scatter = plot.Plot.Add.Scatter(x, y);
                     scatter.Color = ScottPlot.Colors.Blue; // Professional blue color
+
                     // Clean up the ID for display: "0" -> "Plot 0", "Plot_1" -> "Plot 1"
-                    string displayName = createdId.StartsWith("Plot_") ? 
-                        $"Plot {createdId.Substring(5)}" : 
+                    string displayName = createdId.StartsWith("Plot_") ?
+                        $"Plot {createdId.Substring(5)}" :
                         $"Plot {createdId}";
                     plot.Plot.Title(displayName);
                     plot.Refresh();
-                    
-                    logger.Information($"Plot {createdId} added and displayed");
+
+                    logger.Information($"Plot {createdId} added and displayed with {DataManager.GetDataTypeName(0)}");
                 }
             }
         }

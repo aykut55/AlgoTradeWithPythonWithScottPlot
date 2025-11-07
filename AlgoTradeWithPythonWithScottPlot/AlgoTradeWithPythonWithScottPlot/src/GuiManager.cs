@@ -2277,7 +2277,7 @@ namespace AlgoTradeWithPythonWithScottPlot
 
         public void LoadSineWaveData(double amplitude, double frequency, int points)
         {
-            int methodId = 1; // 0: Normal for loop, 1: Parallel.For, 2: ScottPlot Generate
+            int methodId = 3; // 0: Normal for loop, 1: Parallel.For, 2: ScottPlot Generate, 3: DataManager
             double[]? x = null;
             double[]? y = null;
 
@@ -2322,6 +2322,15 @@ namespace AlgoTradeWithPythonWithScottPlot
                     // Generate sine wave data using ScottPlot Generate
                     x = SPGenerate.Consecutive(points);
                     y = SPGenerate.Sin(points, mult: amplitude, oscillations: frequency);
+                }
+                else if (methodId == 3)
+                {
+                    logger.Information("Using DataManager to generate sine wave data");
+
+                    // Generate sine wave data using DataManager (idx = 1: Simple sine wave)
+                    var data = DataManager.GenerateData(idx: 1, points: points, amplitude: amplitude, frequency: frequency);
+                    x = data.x;
+                    y = data.y;
                 }
                 else
                 {

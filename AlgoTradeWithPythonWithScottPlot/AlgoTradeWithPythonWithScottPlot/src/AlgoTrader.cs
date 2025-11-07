@@ -9,14 +9,12 @@ namespace AlgoTradeWithPythonWithScottPlot
 {
     public class AlgoTrader : IDisposable
     {
-        private DataManager dataManager;
         private GuiManager guiManager;
         private bool disposed = false;
         private readonly ILogger logger = Log.ForContext<AlgoTrader>();
 
         public AlgoTrader()
         {
-            dataManager = new DataManager();
             logger.Information("AlgoTrader instance created");
         }
 
@@ -59,11 +57,6 @@ namespace AlgoTradeWithPythonWithScottPlot
         private void OnTerminateRequested(object sender, EventArgs e)
         {
             Terminate();
-        }
-
-        public DataManager GetDataManager()
-        {
-            return dataManager;
         }
 
         public void Reset()
@@ -129,7 +122,7 @@ namespace AlgoTradeWithPythonWithScottPlot
                 if (disposing)
                 {
                     logger.Information("Disposing AlgoTrader and its components");
-                    
+
                     // Unsubscribe from GUI events
                     if (guiManager != null)
                     {
@@ -139,8 +132,6 @@ namespace AlgoTradeWithPythonWithScottPlot
                         guiManager.ResetRequested -= OnResetRequested;
                         guiManager.TerminateRequested -= OnTerminateRequested;
                     }
-                    
-                    dataManager?.Dispose();
                 }
                 disposed = true;
                 logger.Information("AlgoTrader disposed successfully");
