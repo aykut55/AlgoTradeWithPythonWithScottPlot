@@ -69,6 +69,16 @@ namespace AlgoTradeWithPythonWithScottPlot
         private CheckBox? enableScrollbarCheckBox;
         private CheckBox? enableCrosshairCheckBox;
 
+        // Zoom axis control
+        public enum ZoomAxisMode
+        {
+            Both = 0,      // Both X & Y axes
+            XOnly = 1,     // X axis only
+            YOnly = 2      // Y axis only
+        }
+        private ComboBox? zoomAxisComboBox;
+        private ZoomAxisMode currentZoomAxisMode = ZoomAxisMode.Both;
+
         // Throttling for real-time sync
         private DateTime lastMouseMoveSync = DateTime.MinValue;
         private const int MOUSE_MOVE_SYNC_THROTTLE_MS = 10; // 10ms throttle
@@ -724,6 +734,9 @@ namespace AlgoTradeWithPythonWithScottPlot
             plotInfo.Crosshair.IsVisible = true; // Default enabled
             plotInfo.Crosshair.LineColor = SPColors.Red;
             plotInfo.Crosshair.LineWidth = 1;
+
+            // Configure zoom axis control
+            ConfigurePlotZoomAxis(plotInfo.Plot, plotInfo.Id);
 
             plotInfo.Plot.Refresh();
         }
@@ -2612,6 +2625,157 @@ namespace AlgoTradeWithPythonWithScottPlot
         public void TriggerStop() => StopRequested?.Invoke(this, EventArgs.Empty);
         public void TriggerReset() => ResetRequested?.Invoke(this, EventArgs.Empty);
         public void TriggerTerminate() => TerminateRequested?.Invoke(this, EventArgs.Empty);
+
+        #region Zoom Axis Control
+
+        /// <summary>
+        /// Set zoom axis combobox ve event'i bağla
+        /// </summary>
+        public void SetZoomAxisComboBox(ComboBox comboBox)
+        {
+            zoomAxisComboBox = comboBox;
+            zoomAxisComboBox.SelectedIndexChanged += OnZoomAxisChanged;
+            logger.Information("Zoom axis combobox connected");
+        }
+
+        /// <summary>
+        /// Zoom axis mode değiştiğinde tüm plotlara uygula
+        /// </summary>
+        private void OnZoomAxisChanged(object? sender, EventArgs e)
+        {
+            if (zoomAxisComboBox != null)
+            {
+                currentZoomAxisMode = (ZoomAxisMode)zoomAxisComboBox.SelectedIndex;
+                ApplyZoomAxisModeToAllPlots();
+                logger.Information($"Zoom axis mode changed to: {currentZoomAxisMode}");
+            }
+        }
+
+        /// <summary>
+        /// Tüm plotlara zoom axis mode'u uygula
+        /// </summary>
+        private void ApplyZoomAxisModeToAllPlots()
+        {
+            foreach (var plotInfo in plots.Values)
+            {
+                if (plotInfo.Plot != null)
+                {
+                    ConfigurePlotZoomAxis(plotInfo.Plot, plotInfo.Id);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Bir plot için zoom axis konfigürasyonu
+        /// Mouse wheel event'ini override ederek axis-specific zoom sağla
+        /// </summary>
+        private void ConfigurePlotZoomAxis(ScottPlot.WinForms.FormsPlot plot, string plotId)
+        {
+            // Mevcut mouse wheel handler'ları temizle ve yenisini ekle
+            // Not: ScottPlot WinForms FormsPlot.MouseWheel event'ini kullan
+
+            plot.MouseWheel += (s, e) =>
+            {
+                // Zoom enabled mı kontrol et
+                bool zoomEnabled = syncZoomCheckBox?.Checked ?? false;
+                if (!zoomEnabled)
+                    return;
+
+                double zoomFraction = e.Delta > 0 ? 0.85 : 1.15; // Zoom in/out faktörü
+
+                if (currentZoomAxisMode == ZoomAxisMode.Both)
+                {
+                    // Default ScottPlot behavior - both axes
+                    // ScottPlot kendi zoom'unu kullansın
+                    return;
+                }
+
+                // Custom axis-specific zoom
+                var mouseCoords = plot.Plot.GetCoordinates(e.X, e.Y);
+
+                if (currentZoomAxisMode == ZoomAxisMode.XOnly)
+                {
+                    // Sadece X ekseni zoom - Mouse noktası sabit kalır
+                    var currentLimits = plot.Plot.Axes.GetLimits();
+
+                    // Mouse imlecinin solundaki ve sağındaki mesafeyi hesapla
+                    double leftDistance = mouseCoords.X - currentLimits.Left;
+                    double rightDistance = currentLimits.Right - mouseCoords.X;
+
+                    // Her iki mesafeyi de zoom fractionı ile çarp
+                    double newLeftDistance = leftDistance * zoomFraction;
+                    double newRightDistance = rightDistance * zoomFraction;
+
+                    // Yeni limitleri hesapla - mouse noktası sabit kalır
+                    double xMin = mouseCoords.X - newLeftDistance;
+                    double xMax = mouseCoords.X + newRightDistance;
+
+                    plot.Plot.Axes.SetLimits(xMin, xMax, currentLimits.Bottom, currentLimits.Top);
+                    plot.Refresh();
+                }
+                else if (currentZoomAxisMode == ZoomAxisMode.YOnly)
+                {
+                    // Sadece Y ekseni zoom - Mouse noktası sabit kalır
+                    var currentLimits = plot.Plot.Axes.GetLimits();
+
+                    // Mouse imlecinin altındaki ve üstündeki mesafeyi hesapla
+                    double bottomDistance = mouseCoords.Y - currentLimits.Bottom;
+                    double topDistance = currentLimits.Top - mouseCoords.Y;
+
+                    // Her iki mesafeyi de zoom fractionı ile çarp
+                    double newBottomDistance = bottomDistance * zoomFraction;
+                    double newTopDistance = topDistance * zoomFraction;
+
+                    // Yeni limitleri hesapla - mouse noktası sabit kalır
+                    double yMin = mouseCoords.Y - newBottomDistance;
+                    double yMax = mouseCoords.Y + newTopDistance;
+
+                    plot.Plot.Axes.SetLimits(currentLimits.Left, currentLimits.Right, yMin, yMax);
+                    plot.Refresh();
+                }
+
+                // Sync zoom enabled ise diğer plotlara da uygula
+                if (syncZoomCheckBox?.Checked ?? false)
+                {
+                    SyncZoomFromPlot(plotId);
+                }
+            };
+
+            logger.Debug($"Zoom axis configured for plot {plotId}: {currentZoomAxisMode}");
+        }
+
+        /// <summary>
+        /// Belirli bir plottan diğer plotlara zoom sync et
+        /// </summary>
+        private void SyncZoomFromPlot(string sourcePlotId)
+        {
+            if (!plots.TryGetValue(sourcePlotId, out var sourcePlot))
+                return;
+
+            var sourceLimits = sourcePlot.Plot.Plot.Axes.GetLimits();
+
+            foreach (var plotInfo in plots.Values)
+            {
+                if (plotInfo.Id != sourcePlotId && plotInfo.Plot != null)
+                {
+                    if (mainForm.InvokeRequired)
+                    {
+                        mainForm.Invoke(() =>
+                        {
+                            plotInfo.Plot.Plot.Axes.SetLimits(sourceLimits);
+                            plotInfo.Plot.Refresh();
+                        });
+                    }
+                    else
+                    {
+                        plotInfo.Plot.Plot.Axes.SetLimits(sourceLimits);
+                        plotInfo.Plot.Refresh();
+                    }
+                }
+            }
+        }
+
+        #endregion
 
         public void Dispose()
         {

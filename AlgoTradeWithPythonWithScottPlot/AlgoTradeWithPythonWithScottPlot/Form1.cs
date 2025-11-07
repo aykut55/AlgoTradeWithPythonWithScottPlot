@@ -31,9 +31,12 @@ namespace AlgoTradeWithPythonWithScottPlot
         private void Form1_Load(object sender, EventArgs e)
         {
             logger.Information("Form1_Load event triggered - Form is now visible");
-            
+
             // Timer'ı başlat - her 500ms'de logları güncelle
             logUpdateTimer = new System.Threading.Timer(UpdateLogDisplay, null, 0, 500);
+
+            // Set zoom axis combobox
+            guiManager.SetZoomAxisComboBox(cmbZoomAxis);
         }
 
         private void UpdateLogDisplay(object state)

@@ -58,6 +58,8 @@
             txtLastN = new TextBox();
             lblLastN = new Label();
             btnPlotLastN = new Button();
+            lblZoomAxis = new Label();
+            cmbZoomAxis = new ComboBox();
             btnLoadData = new Button();
             btnClearData = new Button();
             btnClearLogs = new Button();
@@ -219,6 +221,8 @@
             pnlTop.Controls.Add(txtLastN);
             pnlTop.Controls.Add(lblLastN);
             pnlTop.Controls.Add(btnPlotLastN);
+            pnlTop.Controls.Add(lblZoomAxis);
+            pnlTop.Controls.Add(cmbZoomAxis);
             pnlTop.Controls.Add(btnLoadData);
             pnlTop.Controls.Add(btnClearData);
             pnlTop.Controls.Add(btnClearLogs);
@@ -326,6 +330,26 @@
             btnPlotLastN.Text = "Last N";
             btnPlotLastN.UseVisualStyleBackColor = true;
             btnPlotLastN.Click += btnPlotLastN_Click;
+            //
+            // lblZoomAxis
+            //
+            lblZoomAxis.AutoSize = true;
+            lblZoomAxis.Location = new Point(1140, 33);
+            lblZoomAxis.Name = "lblZoomAxis";
+            lblZoomAxis.Size = new Size(67, 15);
+            lblZoomAxis.TabIndex = 20;
+            lblZoomAxis.Text = "Zoom Axis:";
+            //
+            // cmbZoomAxis
+            //
+            cmbZoomAxis.DropDownStyle = ComboBoxStyle.DropDownList;
+            cmbZoomAxis.FormattingEnabled = true;
+            cmbZoomAxis.Items.AddRange(new object[] { "Both (X & Y)", "X Axis Only", "Y Axis Only" });
+            cmbZoomAxis.Location = new Point(1210, 30);
+            cmbZoomAxis.Name = "cmbZoomAxis";
+            cmbZoomAxis.Size = new Size(110, 23);
+            cmbZoomAxis.TabIndex = 21;
+            cmbZoomAxis.SelectedIndex = 0;
             //
             // btnLoadData
             //
@@ -508,6 +532,8 @@
         private TextBox txtLastN;
         private Label lblLastN;
         private Button btnPlotLastN;
+        private Label lblZoomAxis;
+        private ComboBox cmbZoomAxis;
         private Label lblFrequency;
         private TextBox txtFrequency;
         private Label lblPoints;
