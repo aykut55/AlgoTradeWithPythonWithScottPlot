@@ -133,8 +133,8 @@ namespace AlgoTradeWithPythonWithScottPlot
                     // Generate data using DataManager (idx = 0: Complex wave with noise)
                     var (x, y) = DataManager.GenerateData(idx: 0, points: 1000);
 
-                    var scatter = plot.Plot.Add.Scatter(x, y);
-                    scatter.Color = ScottPlot.Colors.Blue; // Professional blue color
+                    // Use GuiManager's adaptive plotting method for automatic optimization
+                    guiManager.AddAdaptivePlotPublic(plot, x, y, createdId);
 
                     // Clean up the ID for display: "0" -> "Plot 0", "Plot_1" -> "Plot 1"
                     string displayName = createdId.StartsWith("Plot_") ?

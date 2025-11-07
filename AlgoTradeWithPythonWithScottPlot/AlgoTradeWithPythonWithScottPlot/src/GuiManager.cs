@@ -2275,6 +2275,45 @@ namespace AlgoTradeWithPythonWithScottPlot
             UpdateStatus("All plot data cleared");
         }
 
+        // Performance thresholds for adaptive plotting
+        private const int SCATTER_THRESHOLD = 50000;    // <= 50K points: use Scatter (high quality)
+        private const int SIGNAL_THRESHOLD = 10000000;  // <= 10M points: use Signal (optimized)
+
+        /// <summary>
+        /// Veri boyutuna göre en uygun plot tipini kullanarak veri ekler
+        /// Adaptive plotting: Küçük veri için Scatter, büyük veri için Signal
+        /// </summary>
+        private void AddAdaptivePlot(ScottPlot.WinForms.FormsPlot plot, double[] x, double[] y, string plotId)
+        {
+            int points = x?.Length ?? 0;
+
+            if (points <= SCATTER_THRESHOLD)
+            {
+                // Small dataset: Use Scatter for high quality rendering
+                var scatter = plot.Plot.Add.Scatter(x, y);
+                scatter.Color = SPColors.Blue;
+                scatter.LineWidth = 1.5f;
+                logger.Information($"Plot {plotId}: Using Scatter for {points:N0} points");
+            }
+            else
+            {
+                // Large dataset: Use SignalXY for performance
+                // SignalXY automatically downsamples based on zoom level
+                var signal = plot.Plot.Add.SignalXY(x, y);
+                signal.Color = SPColors.Blue;
+                signal.LineWidth = 1.5f;
+                logger.Information($"Plot {plotId}: Using SignalXY (adaptive downsampling) for {points:N0} points");
+            }
+        }
+
+        /// <summary>
+        /// Public wrapper for AddAdaptivePlot - Form1'den kullanılabilir
+        /// </summary>
+        public void AddAdaptivePlotPublic(ScottPlot.WinForms.FormsPlot plot, double[] x, double[] y, string plotId)
+        {
+            AddAdaptivePlot(plot, x, y, plotId);
+        }
+
         public void LoadSineWaveData(double amplitude, double frequency, int points)
         {
             int methodId = 3; // 0: Normal for loop, 1: Parallel.For, 2: ScottPlot Generate, 3: DataManager
@@ -2283,7 +2322,7 @@ namespace AlgoTradeWithPythonWithScottPlot
 
             try
             {
-                logger.Information($"Loading sine wave data: amplitude={amplitude}, frequency={frequency}, points={points}");
+                logger.Information($"Loading sine wave data: amplitude={amplitude}, frequency={frequency}, points={points:N0}");
 
                 if (methodId == 0)
                 {
@@ -2337,7 +2376,7 @@ namespace AlgoTradeWithPythonWithScottPlot
                     throw new InvalidOperationException($"Invalid methodId: {methodId}");
                 }
 
-                // Apply data to all plots
+                // Apply data to all plots using adaptive plotting
                 foreach (var plotInfo in plots.Values)
                 {
                     if (plotInfo.Plot != null)
@@ -2348,10 +2387,8 @@ namespace AlgoTradeWithPythonWithScottPlot
                             {
                                 plotInfo.Plot.Plot.Clear();
 
-                                // Add scatter plot
-                                var scatter = plotInfo.Plot.Plot.Add.Scatter(x, y);
-                                scatter.Color = SPColors.Blue; // Professional blue color
-                                scatter.LineWidth = 1.5f;
+                                // Use adaptive plotting based on data size
+                                AddAdaptivePlot(plotInfo.Plot, x, y, plotInfo.Id);
 
                                 // Recreate crosshair after clear
                                 plotInfo.Crosshair = plotInfo.Plot.Plot.Add.Crosshair(0, 0);
@@ -2367,10 +2404,8 @@ namespace AlgoTradeWithPythonWithScottPlot
                         {
                             plotInfo.Plot.Plot.Clear();
 
-                            // Add scatter plot
-                            var scatter = plotInfo.Plot.Plot.Add.Scatter(x, y);
-                            scatter.Color = SPColors.Blue; // Professional blue color
-                            scatter.LineWidth = 1.5f;
+                            // Use adaptive plotting based on data size
+                            AddAdaptivePlot(plotInfo.Plot, x, y, plotInfo.Id);
 
                             // Recreate crosshair after clear
                             plotInfo.Crosshair = plotInfo.Plot.Plot.Add.Crosshair(0, 0);
