@@ -2314,6 +2314,75 @@ namespace AlgoTradeWithPythonWithScottPlot
             AddAdaptivePlot(plot, x, y, plotId);
         }
 
+        /// <summary>
+        /// DataFilterManager'dan gelen filtrelenmiş veriyi tüm plotlara yükler
+        /// </summary>
+        public void LoadFilteredData(DataFilterManager.FilterResult filterResult)
+        {
+            if (filterResult == null || filterResult.X == null || filterResult.Y == null)
+            {
+                logger.Error("LoadFilteredData: Invalid filter result");
+                UpdateStatus("Error: Invalid filter result");
+                return;
+            }
+
+            try
+            {
+                logger.Information($"LoadFilteredData: {filterResult.Description}");
+
+                // Apply filtered data to all plots
+                foreach (var plotInfo in plots.Values)
+                {
+                    if (plotInfo.Plot != null)
+                    {
+                        if (mainForm.InvokeRequired)
+                        {
+                            mainForm.Invoke(() =>
+                            {
+                                plotInfo.Plot.Plot.Clear();
+
+                                // Use adaptive plotting based on data size
+                                AddAdaptivePlot(plotInfo.Plot, filterResult.X, filterResult.Y, plotInfo.Id);
+
+                                // Recreate crosshair after clear
+                                plotInfo.Crosshair = plotInfo.Plot.Plot.Add.Crosshair(0, 0);
+                                plotInfo.Crosshair.IsVisible = enableCrosshairCheckBox?.Checked ?? true;
+                                plotInfo.Crosshair.LineColor = SPColors.Red;
+                                plotInfo.Crosshair.LineWidth = 1;
+
+                                plotInfo.Plot.Plot.Axes.AutoScale();
+                                plotInfo.Plot.Refresh();
+                            });
+                        }
+                        else
+                        {
+                            plotInfo.Plot.Plot.Clear();
+
+                            // Use adaptive plotting based on data size
+                            AddAdaptivePlot(plotInfo.Plot, filterResult.X, filterResult.Y, plotInfo.Id);
+
+                            // Recreate crosshair after clear
+                            plotInfo.Crosshair = plotInfo.Plot.Plot.Add.Crosshair(0, 0);
+                            plotInfo.Crosshair.IsVisible = enableCrosshairCheckBox?.Checked ?? true;
+                            plotInfo.Crosshair.LineColor = SPColors.Red;
+                            plotInfo.Crosshair.LineWidth = 1;
+
+                            plotInfo.Plot.Plot.Axes.AutoScale();
+                            plotInfo.Plot.Refresh();
+                        }
+                    }
+                }
+
+                logger.Information($"Filtered data loaded to {plots.Count} plots successfully");
+                UpdateStatus($"Loaded: {filterResult.Description}");
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"Error loading filtered data: {ex.Message}");
+                UpdateStatus("Error loading filtered data");
+            }
+        }
+
         public void LoadSineWaveData(double amplitude, double frequency, int points)
         {
             int methodId = 3; // 0: Normal for loop, 1: Parallel.For, 2: ScottPlot Generate, 3: DataManager

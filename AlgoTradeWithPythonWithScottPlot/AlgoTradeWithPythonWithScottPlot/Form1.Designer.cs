@@ -53,6 +53,11 @@
             lblFrequency = new Label();
             txtAmplitude = new TextBox();
             lblAmplitude = new Label();
+            btnPlotAllData = new Button();
+            btnPlotFitScreen = new Button();
+            txtLastN = new TextBox();
+            lblLastN = new Label();
+            btnPlotLastN = new Button();
             btnLoadData = new Button();
             btnClearData = new Button();
             btnClearLogs = new Button();
@@ -209,6 +214,11 @@
             pnlTop.Controls.Add(lblFrequency);
             pnlTop.Controls.Add(txtAmplitude);
             pnlTop.Controls.Add(lblAmplitude);
+            pnlTop.Controls.Add(btnPlotAllData);
+            pnlTop.Controls.Add(btnPlotFitScreen);
+            pnlTop.Controls.Add(txtLastN);
+            pnlTop.Controls.Add(lblLastN);
+            pnlTop.Controls.Add(btnPlotLastN);
             pnlTop.Controls.Add(btnLoadData);
             pnlTop.Controls.Add(btnClearData);
             pnlTop.Controls.Add(btnClearLogs);
@@ -269,9 +279,56 @@
             lblAmplitude.Size = new Size(66, 15);
             lblAmplitude.TabIndex = 4;
             lblAmplitude.Text = "Amplitude:";
-            // 
+            //
+            // btnPlotAllData
+            //
+            btnPlotAllData.Location = new Point(770, 30);
+            btnPlotAllData.Name = "btnPlotAllData";
+            btnPlotAllData.Size = new Size(70, 23);
+            btnPlotAllData.TabIndex = 15;
+            btnPlotAllData.Text = "All Data";
+            btnPlotAllData.UseVisualStyleBackColor = true;
+            btnPlotAllData.Click += btnPlotAllData_Click;
+            //
+            // btnPlotFitScreen
+            //
+            btnPlotFitScreen.Location = new Point(845, 30);
+            btnPlotFitScreen.Name = "btnPlotFitScreen";
+            btnPlotFitScreen.Size = new Size(80, 23);
+            btnPlotFitScreen.TabIndex = 16;
+            btnPlotFitScreen.Text = "Fit Screen";
+            btnPlotFitScreen.UseVisualStyleBackColor = true;
+            btnPlotFitScreen.Click += btnPlotFitScreen_Click;
+            //
+            // lblLastN
+            //
+            lblLastN.AutoSize = true;
+            lblLastN.Location = new Point(935, 33);
+            lblLastN.Name = "lblLastN";
+            lblLastN.Size = new Size(44, 15);
+            lblLastN.TabIndex = 17;
+            lblLastN.Text = "Last N:";
+            //
+            // txtLastN
+            //
+            txtLastN.Location = new Point(985, 30);
+            txtLastN.Name = "txtLastN";
+            txtLastN.Size = new Size(70, 23);
+            txtLastN.TabIndex = 18;
+            txtLastN.Text = "100";
+            //
+            // btnPlotLastN
+            //
+            btnPlotLastN.Location = new Point(1060, 30);
+            btnPlotLastN.Name = "btnPlotLastN";
+            btnPlotLastN.Size = new Size(70, 23);
+            btnPlotLastN.TabIndex = 19;
+            btnPlotLastN.Text = "Last N";
+            btnPlotLastN.UseVisualStyleBackColor = true;
+            btnPlotLastN.Click += btnPlotLastN_Click;
+            //
             // btnLoadData
-            // 
+            //
             btnLoadData.Location = new Point(502, 63);
             btnLoadData.Name = "btnLoadData";
             btnLoadData.Size = new Size(100, 30);
@@ -446,6 +503,11 @@
         private Button btnLoadData;
         private Label lblAmplitude;
         private TextBox txtAmplitude;
+        private Button btnPlotAllData;
+        private Button btnPlotFitScreen;
+        private TextBox txtLastN;
+        private Label lblLastN;
+        private Button btnPlotLastN;
         private Label lblFrequency;
         private TextBox txtFrequency;
         private Label lblPoints;

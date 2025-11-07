@@ -198,6 +198,112 @@ namespace AlgoTradeWithPythonWithScottPlot
             guiManager.LoadSineWaveData(amplitude, frequency, points);
         }
 
+        private void btnPlotAllData_Click(object sender, EventArgs e)
+        {
+            // Parse input values
+            if (!double.TryParse(txtAmplitude.Text, out double amplitude))
+            {
+                amplitude = 1.0;
+                txtAmplitude.Text = "1.0";
+            }
+
+            if (!double.TryParse(txtFrequency.Text, out double frequency))
+            {
+                frequency = 1.0;
+                txtFrequency.Text = "1.0";
+            }
+
+            if (!int.TryParse(txtPoints.Text, out int points))
+            {
+                points = 1000;
+                txtPoints.Text = "1000";
+            }
+
+            // Generate data using DataManager
+            var (x, y) = DataManager.GenerateData(idx: 1, points: points, amplitude: amplitude, frequency: frequency);
+
+            // Use DataFilterManager to get all data (no filtering)
+            var filterResult = DataFilterManager.GetAllData(x, y);
+
+            // Plot to all plots
+            guiManager.LoadFilteredData(filterResult);
+
+            logger.Information($"Plot All Data: {filterResult.Description}");
+        }
+
+        private void btnPlotFitScreen_Click(object sender, EventArgs e)
+        {
+            // Parse input values
+            if (!double.TryParse(txtAmplitude.Text, out double amplitude))
+            {
+                amplitude = 1.0;
+                txtAmplitude.Text = "1.0";
+            }
+
+            if (!double.TryParse(txtFrequency.Text, out double frequency))
+            {
+                frequency = 1.0;
+                txtFrequency.Text = "1.0";
+            }
+
+            if (!int.TryParse(txtPoints.Text, out int points))
+            {
+                points = 1000;
+                txtPoints.Text = "1000";
+            }
+
+            // Generate data using DataManager
+            var (x, y) = DataManager.GenerateData(idx: 1, points: points, amplitude: amplitude, frequency: frequency);
+
+            // Use DataFilterManager to fit to screen (downsampling)
+            var filterResult = DataFilterManager.GetFitToScreenData(x, y, plotWidthPixels: 1200, pointsPerPixel: 2);
+
+            // Plot to all plots
+            guiManager.LoadFilteredData(filterResult);
+
+            logger.Information($"Plot Fit Screen: {filterResult.Description}");
+        }
+
+        private void btnPlotLastN_Click(object sender, EventArgs e)
+        {
+            // Parse input values
+            if (!double.TryParse(txtAmplitude.Text, out double amplitude))
+            {
+                amplitude = 1.0;
+                txtAmplitude.Text = "1.0";
+            }
+
+            if (!double.TryParse(txtFrequency.Text, out double frequency))
+            {
+                frequency = 1.0;
+                txtFrequency.Text = "1.0";
+            }
+
+            if (!int.TryParse(txtPoints.Text, out int points))
+            {
+                points = 1000;
+                txtPoints.Text = "1000";
+            }
+
+            // Parse Last N value
+            if (!int.TryParse(txtLastN.Text, out int lastN))
+            {
+                lastN = 100;
+                txtLastN.Text = "100";
+            }
+
+            // Generate data using DataManager
+            var (x, y) = DataManager.GenerateData(idx: 1, points: points, amplitude: amplitude, frequency: frequency);
+
+            // Use DataFilterManager to get last N data
+            var filterResult = DataFilterManager.GetLastNData(x, y, lastN);
+
+            // Plot to all plots
+            guiManager.LoadFilteredData(filterResult);
+
+            logger.Information($"Plot Last N: {filterResult.Description}");
+        }
+
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
         {
             logger.Information("Form1_FormClosed event triggered - Disposing components");
