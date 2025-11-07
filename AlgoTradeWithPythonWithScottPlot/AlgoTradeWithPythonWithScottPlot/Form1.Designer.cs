@@ -344,7 +344,7 @@
             //
             cmbZoomAxis.DropDownStyle = ComboBoxStyle.DropDownList;
             cmbZoomAxis.FormattingEnabled = true;
-            cmbZoomAxis.Items.AddRange(new object[] { "Both (X & Y)", "X Axis Only", "Y Axis Only" });
+            cmbZoomAxis.Items.AddRange(new object[] { "Both (X & Y)", "X Axis Only", "Y Axis Only", "None" });
             cmbZoomAxis.Location = new Point(1210, 30);
             cmbZoomAxis.Name = "cmbZoomAxis";
             cmbZoomAxis.Size = new Size(110, 23);

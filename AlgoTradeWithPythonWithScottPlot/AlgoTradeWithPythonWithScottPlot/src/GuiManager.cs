@@ -74,7 +74,8 @@ namespace AlgoTradeWithPythonWithScottPlot
         {
             Both = 0,      // Both X & Y axes
             XOnly = 1,     // X axis only
-            YOnly = 2      // Y axis only
+            YOnly = 2,     // Y axis only
+            None = 3       // No mouse wheel zoom
         }
         private ComboBox? zoomAxisComboBox;
         private ZoomAxisMode currentZoomAxisMode = ZoomAxisMode.Both;
@@ -2676,6 +2677,12 @@ namespace AlgoTradeWithPythonWithScottPlot
 
             plot.MouseWheel += (s, e) =>
             {
+                // None mode: Mouse wheel zoom tamamen devre dışı
+                if (currentZoomAxisMode == ZoomAxisMode.None)
+                {
+                    return; // Hiçbir şey yapma
+                }
+
                 // Zoom enabled mı kontrol et
                 bool zoomEnabled = syncZoomCheckBox?.Checked ?? false;
                 if (!zoomEnabled)
