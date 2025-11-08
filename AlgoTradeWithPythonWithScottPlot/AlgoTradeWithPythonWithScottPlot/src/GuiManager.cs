@@ -447,8 +447,10 @@ namespace AlgoTradeWithPythonWithScottPlot
                 // Add scrollbars FIRST (dock order matters!)
                 plotInfo.Container.Controls.Add(plotInfo.YAxisScrollBar); // 1. Y ScrollBar (Right)
                 plotInfo.Container.Controls.Add(plotInfo.XAxisScrollBar); // 2. X ScrollBar (Bottom)
-                // Add plot LAST (will fill remaining space)
+                // Add plot (will fill remaining space)
                 plotInfo.Container.Controls.Add(plotInfo.Plot); // 3. Plot (Fill)
+
+                // Add buttons AFTER plot
                 plotInfo.Container.Controls.Add(plotInfo.YZoomInButton);
                 plotInfo.Container.Controls.Add(plotInfo.YZoomOutButton);
                 plotInfo.Container.Controls.Add(plotInfo.XZoomInButton);
@@ -461,12 +463,32 @@ namespace AlgoTradeWithPythonWithScottPlot
                 plotInfo.Container.Controls.Add(plotInfo.ResetXButton);
                 plotInfo.Container.Controls.Add(plotInfo.ResetYButton);
                 plotInfo.Container.Controls.Add(plotInfo.CopyToAllButton);
-                
+
                 // Add Close and Maximize buttons only for non-Plot0
                 if (!isMainPlot)
                 {
                     plotInfo.Container.Controls.Add(plotInfo.CloseButton);
                     plotInfo.Container.Controls.Add(plotInfo.MaximizeButton);
+                }
+
+                // Bring all buttons to front (above Plot)
+                plotInfo.YZoomInButton?.BringToFront();
+                plotInfo.YZoomOutButton?.BringToFront();
+                plotInfo.XZoomInButton?.BringToFront();
+                plotInfo.XZoomOutButton?.BringToFront();
+                plotInfo.YPanUpButton?.BringToFront();
+                plotInfo.YPanDownButton?.BringToFront();
+                plotInfo.XPanLeftButton?.BringToFront();
+                plotInfo.XPanRightButton?.BringToFront();
+                plotInfo.ResetButton?.BringToFront();
+                plotInfo.ResetXButton?.BringToFront();
+                plotInfo.ResetYButton?.BringToFront();
+                plotInfo.CopyToAllButton?.BringToFront();
+
+                if (!isMainPlot)
+                {
+                    plotInfo.CloseButton?.BringToFront();
+                    plotInfo.MaximizeButton?.BringToFront();
                 }
 
                 // Add container to parent panel (default: pnlCenter)
