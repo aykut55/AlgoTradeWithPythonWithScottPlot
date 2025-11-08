@@ -378,20 +378,37 @@ namespace AlgoTradeWithPythonWithScottPlot
                     plotInfo.Container.Height = height;
                 }
 
+                // Create horizontal scrollbar for data navigation FIRST (dock order matters!)
+                plotInfo.DataScrollBar = new HScrollBar
+                {
+                    Name = $"scrollbar_{id}",
+                    Dock = DockStyle.Bottom,
+                    Height = 17,
+                    Visible = false // Initially hidden, will be shown when ViewRange is set
+                };
+
+                // ScrollBar scroll event handler
+                plotInfo.DataScrollBar.Scroll += (sender, e) =>
+                {
+                    plotInfo.UpdateViewFromScrollBar(e.NewValue);
+                };
+
                 // Create FormsPlot (with margins for zoom controls)
+                // Dock.Fill yaparız, scrollbar zaten bottom'a docklandı, Plot geriye kalan alanı doldurur
                 plotInfo.Plot = new FormsPlot
                 {
                     Name = $"plot_{id}",
-                    Dock = DockStyle.None,
-                    Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom,
+                    Dock = DockStyle.Fill,  // Fill ile scrollbar'ın üstünü doldurur
                     DisplayScale = 1F
                 };
 
                 // Create zoom controls
                 CreateZoomControls(plotInfo);
 
-                // Add all controls to container
-                plotInfo.Container.Controls.Add(plotInfo.Plot);
+                // Add scrollbar FIRST (dock order: last added = front)
+                plotInfo.Container.Controls.Add(plotInfo.DataScrollBar); // ÖNCE scrollbar
+                // Add plot SECOND (will fill remaining space)
+                plotInfo.Container.Controls.Add(plotInfo.Plot); // SONRA plot (fill yapar)
                 plotInfo.Container.Controls.Add(plotInfo.YZoomInButton);
                 plotInfo.Container.Controls.Add(plotInfo.YZoomOutButton);
                 plotInfo.Container.Controls.Add(plotInfo.XZoomInButton);
@@ -2376,6 +2393,9 @@ namespace AlgoTradeWithPythonWithScottPlot
                                     plotInfo.Plot.Plot.Axes.AutoScale();
                                 }
 
+                                // ScrollBar'ı ayarla
+                                plotInfo.SetViewRangeWithScrollBar(filterResult.ViewRange, filterResult.X, filterResult.Y);
+
                                 plotInfo.Plot.Refresh();
                             });
                         }
@@ -2403,6 +2423,9 @@ namespace AlgoTradeWithPythonWithScottPlot
                             {
                                 plotInfo.Plot.Plot.Axes.AutoScale();
                             }
+
+                            // ScrollBar'ı ayarla
+                            plotInfo.SetViewRangeWithScrollBar(filterResult.ViewRange, filterResult.X, filterResult.Y);
 
                             plotInfo.Plot.Refresh();
                         }
