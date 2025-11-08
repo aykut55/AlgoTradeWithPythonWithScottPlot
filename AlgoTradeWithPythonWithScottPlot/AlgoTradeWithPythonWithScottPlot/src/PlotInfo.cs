@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using ScottPlot.WinForms;
 using ScottPlot.Plottables;
@@ -22,6 +24,22 @@ namespace AlgoTradeWithPythonWithScottPlot
 
         // Crosshair reference
         public Crosshair Crosshair { get; set; }
+
+        // ========== VERİ YÖNETİMİ ==========
+
+        // OHLC verisi (tek bir tane olabilir)
+        private CandlestickPlot? _ohlcPlottable;
+
+        // Volume verisi (tek bir tane olabilir)
+        private BarPlot? _volumePlottable;
+
+        // Histogram verisi (tek bir tane olabilir)
+        private BarPlot? _histogramPlottable;
+
+        // Çizgisel veriler (birden fazla olabilir: MA5, MA8, MA200, vb.)
+        private readonly Dictionary<int, Scatter> _lineData = new();
+        private readonly Dictionary<string, int> _lineNameToIndex = new(); // İsimle erişim için
+        private int _nextLineIndex = 0;
 
         // Zoom control references
         public Button YZoomInButton { get; set; }
@@ -59,6 +77,256 @@ namespace AlgoTradeWithPythonWithScottPlot
             Location = Point.Empty;
             Title = id;
             BackgroundColor = Color.White;
+        }
+
+        // ========== OHLC VERİ YÖNETİMİ ==========
+
+        public void SetOHLCData(List<ScottPlot.OHLC> ohlcList)
+        {
+            if (Plot == null) return;
+
+            // Eski OHLC plot varsa kaldır
+            if (_ohlcPlottable != null)
+            {
+                Plot.Plot.Remove(_ohlcPlottable);
+            }
+
+            // Yeni OHLC plot ekle
+            _ohlcPlottable = Plot.Plot.Add.Candlestick(ohlcList);
+            Plot.Refresh();
+        }
+
+        // ========== VOLUME VERİ YÖNETİMİ ==========
+
+        public void SetVolumeData(double[] volumes, double[] positions)
+        {
+            if (Plot == null) return;
+
+            // Eski volume plot varsa kaldır
+            if (_volumePlottable != null)
+            {
+                Plot.Plot.Remove(_volumePlottable);
+            }
+
+            // Yeni volume plot ekle
+            var bars = new List<ScottPlot.Bar>();
+            for (int i = 0; i < volumes.Length; i++)
+            {
+                bars.Add(new ScottPlot.Bar
+                {
+                    Position = positions[i],
+                    Value = volumes[i],
+                    FillColor = ScottPlot.Colors.Blue.WithAlpha(0.5)
+                });
+            }
+
+            _volumePlottable = Plot.Plot.Add.Bars(bars);
+            Plot.Refresh();
+        }
+
+        // ========== HISTOGRAM VERİ YÖNETİMİ ==========
+
+        public void SetHistogramData(double[] values, double[] positions, Color? color = null)
+        {
+            if (Plot == null) return;
+
+            // Eski histogram plot varsa kaldır
+            if (_histogramPlottable != null)
+            {
+                Plot.Plot.Remove(_histogramPlottable);
+            }
+
+            // Yeni histogram plot ekle
+            var bars = new List<ScottPlot.Bar>();
+            var fillColor = color ?? Color.Gray;
+
+            for (int i = 0; i < values.Length; i++)
+            {
+                bars.Add(new ScottPlot.Bar
+                {
+                    Position = positions[i],
+                    Value = values[i],
+                    FillColor = ScottPlot.Color.FromColor(fillColor).WithAlpha(0.5)
+                });
+            }
+
+            _histogramPlottable = Plot.Plot.Add.Bars(bars);
+            Plot.Refresh();
+        }
+
+        // ========== ÇİZGİSEL VERİ YÖNETİMİ (İNDEKSLİ) ==========
+
+        /// <summary>
+        /// İndeks ile çizgisel veri ekler/günceller (MA5, MA8, MA200 gibi)
+        /// </summary>
+        public void SetYData(int index, double[] xData, double[] yData, string name = null, Color? color = null)
+        {
+            if (Plot == null) return;
+
+            // Eski çizgi varsa kaldır
+            if (_lineData.TryGetValue(index, out var oldLine))
+            {
+                Plot.Plot.Remove(oldLine);
+            }
+
+            // Yeni çizgi ekle
+            var newLine = Plot.Plot.Add.Scatter(xData, yData);
+
+            if (color.HasValue)
+                newLine.Color = ScottPlot.Color.FromColor(color.Value);
+
+            if (!string.IsNullOrEmpty(name))
+            {
+                newLine.LegendText = name;
+                _lineNameToIndex[name] = index;
+            }
+
+            _lineData[index] = newLine;
+            Plot.Refresh();
+        }
+
+        /// <summary>
+        /// İsimle çizgisel veri ekler (otomatik indeks ataması yapar)
+        /// </summary>
+        public int AddLineData(string name, double[] xData, double[] yData, Color? color = null)
+        {
+            // Aynı isimde çizgi varsa, onun indeksini kullan
+            if (_lineNameToIndex.TryGetValue(name, out int existingIndex))
+            {
+                SetYData(existingIndex, xData, yData, name, color);
+                return existingIndex;
+            }
+
+            // Yeni çizgi için otomatik indeks ata
+            int newIndex = _nextLineIndex++;
+            SetYData(newIndex, xData, yData, name, color);
+            return newIndex;
+        }
+
+        /// <summary>
+        /// İsimle çizgisel veriyi siler
+        /// </summary>
+        public bool RemoveLineData(string name)
+        {
+            if (_lineNameToIndex.TryGetValue(name, out int index))
+            {
+                return RemoveLineData(index);
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// İndeks ile çizgisel veriyi siler
+        /// </summary>
+        public bool RemoveLineData(int index)
+        {
+            if (_lineData.TryGetValue(index, out var line))
+            {
+                if (Plot != null)
+                {
+                    Plot.Plot.Remove(line);
+                    Plot.Refresh();
+                }
+
+                _lineData.Remove(index);
+
+                // İsim mapping'i temizle
+                var nameToRemove = _lineNameToIndex.FirstOrDefault(x => x.Value == index).Key;
+                if (nameToRemove != null)
+                    _lineNameToIndex.Remove(nameToRemove);
+
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Tüm çizgisel verileri temizler
+        /// </summary>
+        public void ClearAllLineData()
+        {
+            if (Plot != null)
+            {
+                foreach (var line in _lineData.Values)
+                {
+                    Plot.Plot.Remove(line);
+                }
+                Plot.Refresh();
+            }
+
+            _lineData.Clear();
+            _lineNameToIndex.Clear();
+        }
+
+        /// <summary>
+        /// Tüm verileri temizler (OHLC, Volume, Histogram, Lines)
+        /// </summary>
+        public void ClearAllData()
+        {
+            if (Plot != null)
+            {
+                if (_ohlcPlottable != null)
+                {
+                    Plot.Plot.Remove(_ohlcPlottable);
+                    _ohlcPlottable = null;
+                }
+
+                if (_volumePlottable != null)
+                {
+                    Plot.Plot.Remove(_volumePlottable);
+                    _volumePlottable = null;
+                }
+
+                if (_histogramPlottable != null)
+                {
+                    Plot.Plot.Remove(_histogramPlottable);
+                    _histogramPlottable = null;
+                }
+
+                ClearAllLineData();
+            }
+        }
+
+        // ========== AXIS LIMIT YÖNETİMİ ==========
+
+        /// <summary>
+        /// X ekseni limitlerini ayarlar
+        /// </summary>
+        public void SetXAxisLimits(double xMin, double xMax)
+        {
+            if (Plot == null) return;
+            Plot.Plot.Axes.SetLimitsX(xMin, xMax);
+            Plot.Refresh();
+        }
+
+        /// <summary>
+        /// Y ekseni limitlerini ayarlar
+        /// </summary>
+        public void SetYAxisLimits(double yMin, double yMax)
+        {
+            if (Plot == null) return;
+            Plot.Plot.Axes.SetLimitsY(yMin, yMax);
+            Plot.Refresh();
+        }
+
+        /// <summary>
+        /// Her iki ekseni de ayarlar
+        /// </summary>
+        public void SetAxisLimits(double xMin, double xMax, double yMin, double yMax)
+        {
+            if (Plot == null) return;
+            Plot.Plot.Axes.SetLimits(xMin, xMax, yMin, yMax);
+            Plot.Refresh();
+        }
+
+        /// <summary>
+        /// Axis limitlerini otomatik ayarlar (tüm veriyi göster)
+        /// </summary>
+        public void AutoScale()
+        {
+            if (Plot == null) return;
+            Plot.Plot.Axes.AutoScale();
+            Plot.Refresh();
         }
 
         public void Dispose()

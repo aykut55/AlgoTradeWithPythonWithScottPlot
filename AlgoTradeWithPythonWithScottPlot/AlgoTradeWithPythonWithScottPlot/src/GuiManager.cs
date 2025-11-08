@@ -2364,7 +2364,18 @@ namespace AlgoTradeWithPythonWithScottPlot
                                 plotInfo.Crosshair.LineColor = SPColors.Red;
                                 plotInfo.Crosshair.LineWidth = 1;
 
-                                plotInfo.Plot.Plot.Axes.AutoScale();
+                                // ViewRange varsa axis limitlerini ayarla, yoksa AutoScale
+                                if (filterResult.ViewRange.HasValue)
+                                {
+                                    var (xMin, xMax) = filterResult.ViewRange.Value;
+                                    plotInfo.Plot.Plot.Axes.SetLimitsX(xMin, xMax);
+                                    plotInfo.Plot.Plot.Axes.AutoScaleY();
+                                }
+                                else
+                                {
+                                    plotInfo.Plot.Plot.Axes.AutoScale();
+                                }
+
                                 plotInfo.Plot.Refresh();
                             });
                         }
@@ -2381,7 +2392,18 @@ namespace AlgoTradeWithPythonWithScottPlot
                             plotInfo.Crosshair.LineColor = SPColors.Red;
                             plotInfo.Crosshair.LineWidth = 1;
 
-                            plotInfo.Plot.Plot.Axes.AutoScale();
+                            // ViewRange varsa axis limitlerini ayarla, yoksa AutoScale
+                            if (filterResult.ViewRange.HasValue)
+                            {
+                                var (xMin, xMax) = filterResult.ViewRange.Value;
+                                plotInfo.Plot.Plot.Axes.SetLimitsX(xMin, xMax);
+                                plotInfo.Plot.Plot.Axes.AutoScaleY();
+                            }
+                            else
+                            {
+                                plotInfo.Plot.Plot.Axes.AutoScale();
+                            }
+
                             plotInfo.Plot.Refresh();
                         }
                     }
