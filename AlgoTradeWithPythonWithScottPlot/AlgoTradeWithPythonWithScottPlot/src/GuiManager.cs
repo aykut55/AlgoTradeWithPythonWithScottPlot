@@ -68,7 +68,8 @@ namespace AlgoTradeWithPythonWithScottPlot
         private CheckBox? syncAxisLimitsCheckBox;
         private CheckBox? enableScrollbarCheckBox;
         private CheckBox? enableCrosshairCheckBox;
-        private CheckBox? syncXAxisScrollBarCheckBox;
+        private ComboBox? syncScrollBarComboBox;
+        private Label? syncScrollBarLabel;
 
         // Zoom axis control
         public enum ZoomAxisMode
@@ -379,29 +380,55 @@ namespace AlgoTradeWithPythonWithScottPlot
                     plotInfo.Container.Height = height;
                 }
 
-                // Create horizontal scrollbar for data navigation FIRST (dock order matters!)
-                plotInfo.DataScrollBar = new HScrollBar
+                // Create horizontal scrollbar for X-axis navigation FIRST (dock order matters!)
+                plotInfo.XAxisScrollBar = new HScrollBar
                 {
-                    Name = $"scrollbar_{id}",
+                    Name = $"xscrollbar_{id}",
                     Dock = DockStyle.Bottom,
                     Height = 17,
                     Visible = false // Initially hidden, will be shown when ViewRange is set
                 };
 
-                // ScrollBar scroll event handler
-                plotInfo.DataScrollBar.Scroll += (sender, e) =>
+                // Create vertical scrollbar for Y-axis navigation
+                plotInfo.YAxisScrollBar = new VScrollBar
                 {
-                    bool syncScrollBar = syncXAxisScrollBarCheckBox?.Checked ?? true;
+                    Name = $"yscrollbar_{id}",
+                    Dock = DockStyle.Right,
+                    Width = 17,
+                    Visible = false // Initially hidden, will be shown when ViewRange is set
+                };
 
-                    if (syncScrollBar)
+                // X ScrollBar scroll event handler
+                plotInfo.XAxisScrollBar.Scroll += (sender, e) =>
+                {
+                    string syncMode = syncScrollBarComboBox?.SelectedItem?.ToString() ?? "Only X";
+
+                    if (syncMode == "Both X&Y" || syncMode == "Only X")
                     {
                         // Tüm plotları güncelle
-                        UpdateAllPlotsFromScrollBar(e.NewValue, plotInfo);
+                        UpdateAllPlotsFromXScrollBar(e.NewValue, plotInfo);
                     }
-                    else
+                    else // None
                     {
                         // Sadece bu plotu güncelle
-                        plotInfo.UpdateViewFromScrollBar(e.NewValue);
+                        plotInfo.UpdateXViewFromScrollBar(e.NewValue);
+                    }
+                };
+
+                // Y ScrollBar scroll event handler
+                plotInfo.YAxisScrollBar.Scroll += (sender, e) =>
+                {
+                    string syncMode = syncScrollBarComboBox?.SelectedItem?.ToString() ?? "Only X";
+
+                    if (syncMode == "Both X&Y" || syncMode == "Only Y")
+                    {
+                        // Tüm plotları güncelle
+                        UpdateAllPlotsFromYScrollBar(e.NewValue, plotInfo);
+                    }
+                    else // None veya Only X
+                    {
+                        // Sadece bu plotu güncelle
+                        plotInfo.UpdateYViewFromScrollBar(e.NewValue);
                     }
                 };
 
@@ -417,10 +444,11 @@ namespace AlgoTradeWithPythonWithScottPlot
                 // Create zoom controls
                 CreateZoomControls(plotInfo);
 
-                // Add scrollbar FIRST (dock order: last added = front)
-                plotInfo.Container.Controls.Add(plotInfo.DataScrollBar); // ÖNCE scrollbar
-                // Add plot SECOND (will fill remaining space)
-                plotInfo.Container.Controls.Add(plotInfo.Plot); // SONRA plot (fill yapar)
+                // Add scrollbars FIRST (dock order matters!)
+                plotInfo.Container.Controls.Add(plotInfo.YAxisScrollBar); // 1. Y ScrollBar (Right)
+                plotInfo.Container.Controls.Add(plotInfo.XAxisScrollBar); // 2. X ScrollBar (Bottom)
+                // Add plot LAST (will fill remaining space)
+                plotInfo.Container.Controls.Add(plotInfo.Plot); // 3. Plot (Fill)
                 plotInfo.Container.Controls.Add(plotInfo.YZoomInButton);
                 plotInfo.Container.Controls.Add(plotInfo.YZoomOutButton);
                 plotInfo.Container.Controls.Add(plotInfo.XZoomInButton);
@@ -1641,18 +1669,33 @@ namespace AlgoTradeWithPythonWithScottPlot
                 Visible = false
             };
 
-            // Sync X Axis ScrollBar (position 8)
-            syncXAxisScrollBarCheckBox = new CheckBox
+            // ScrollBar Sync Label (position 8)
+            int labelWidth = 70;
+            syncScrollBarLabel = new Label
             {
-                Name = "syncXAxisScrollBar",
-                Text = "Sync ScrollBar",
-                Size = new Size(checkBoxWidth + 20, checkBoxHeight), // Biraz daha geniş
-                Location = new Point(startX + 8 * (checkBoxWidth + margin), startY),
+                Name = "lblScrollBarSync",
+                Text = "ScrollBar Sync:",
+                Size = new Size(labelWidth, checkBoxHeight),
+                Location = new Point(startX + 8 * (checkBoxWidth + margin), startY + 2),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left,
-                Checked = true, // Default enabled - tüm plotları etkilesin
+                Font = new Font("Arial", 7, FontStyle.Regular),
+                TextAlign = ContentAlignment.MiddleLeft,
+                AutoSize = false
+            };
+
+            // Sync ScrollBar ComboBox (position 8 + label width)
+            syncScrollBarComboBox = new ComboBox
+            {
+                Name = "syncScrollBar",
+                Size = new Size(checkBoxWidth + 30, checkBoxHeight + 5),
+                Location = new Point(startX + 8 * (checkBoxWidth + margin) + labelWidth + 5, startY - 2),
+                Anchor = AnchorStyles.Top | AnchorStyles.Left,
+                DropDownStyle = ComboBoxStyle.DropDownList,
                 Font = new Font("Arial", 7, FontStyle.Regular),
                 TabStop = false
             };
+            syncScrollBarComboBox.Items.AddRange(new object[] { "Both X&Y", "Only X", "Only Y", "None" });
+            syncScrollBarComboBox.SelectedIndex = 1; // Default: "Only X"
 
             // Add event handler for scrollbar checkbox
             enableScrollbarCheckBox.CheckedChanged += (sender, e) => UpdateScrollbarState();
@@ -1669,7 +1712,8 @@ namespace AlgoTradeWithPythonWithScottPlot
             pnlTop.Controls.Add(syncAxisLimitsCheckBox);
             pnlTop.Controls.Add(enableScrollbarCheckBox);
             pnlTop.Controls.Add(enableCrosshairCheckBox);
-            pnlTop.Controls.Add(syncXAxisScrollBarCheckBox);
+            pnlTop.Controls.Add(syncScrollBarLabel);
+            pnlTop.Controls.Add(syncScrollBarComboBox);
 
             logger.Information("Sync checkboxes created and added to pnlTop");
             
@@ -1741,9 +1785,9 @@ namespace AlgoTradeWithPythonWithScottPlot
         }
 
         /// <summary>
-        /// Tüm plotların X axis limitlerini scrollbar pozisyonuna göre günceller
+        /// Tüm plotların X axis limitlerini X scrollbar pozisyonuna göre günceller
         /// </summary>
-        private void UpdateAllPlotsFromScrollBar(int scrollPosition, PlotInfo sourcePlotInfo)
+        private void UpdateAllPlotsFromXScrollBar(int scrollPosition, PlotInfo sourcePlotInfo)
         {
             try
             {
@@ -1753,17 +1797,17 @@ namespace AlgoTradeWithPythonWithScottPlot
 
                 foreach (var plotInfo in plots.Values)
                 {
-                    if (plotInfo.Plot != null && plotInfo.DataScrollBar != null)
+                    if (plotInfo.Plot != null && plotInfo.XAxisScrollBar != null)
                     {
                         // Eğer bu plot'un da verisi varsa, aynı scrollbar pozisyonunu uygula
                         if (plotInfo._currentXData != null && plotInfo._currentXData.Length > 0)
                         {
                             // Scrollbar pozisyonunu ayarla (değişikliği tetiklemeden)
-                            plotInfo.DataScrollBar.ValueChanged -= null; // Event handler'ı geçici olarak kaldırmaya gerek yok
+                            plotInfo.XAxisScrollBar.ValueChanged -= null; // Event handler'ı geçici olarak kaldırmaya gerek yok
 
                             // Her plot'un kendi verisine göre görünümünü güncelle
                             int startIndex = Math.Max(0, scrollPosition);
-                            int endIndex = Math.Min(plotInfo._currentXData.Length - 1, startIndex + plotInfo.DataScrollBar.LargeChange - 1);
+                            int endIndex = Math.Min(plotInfo._currentXData.Length - 1, startIndex + plotInfo.XAxisScrollBar.LargeChange - 1);
 
                             if (startIndex < plotInfo._currentXData.Length && endIndex < plotInfo._currentXData.Length)
                             {
@@ -1781,10 +1825,10 @@ namespace AlgoTradeWithPythonWithScottPlot
                                         // ScrollBar'ın pozisyonunu güncelle (diğer plotlarda)
                                         if (plotInfo != sourcePlotInfo)
                                         {
-                                            int newValue = Math.Min(scrollPosition, plotInfo.DataScrollBar.Maximum - plotInfo.DataScrollBar.LargeChange + 1);
-                                            if (newValue >= plotInfo.DataScrollBar.Minimum && newValue <= plotInfo.DataScrollBar.Maximum)
+                                            int newValue = Math.Min(scrollPosition, plotInfo.XAxisScrollBar.Maximum - plotInfo.XAxisScrollBar.LargeChange + 1);
+                                            if (newValue >= plotInfo.XAxisScrollBar.Minimum && newValue <= plotInfo.XAxisScrollBar.Maximum)
                                             {
-                                                plotInfo.DataScrollBar.Value = newValue;
+                                                plotInfo.XAxisScrollBar.Value = newValue;
                                             }
                                         }
                                     });
@@ -1798,10 +1842,10 @@ namespace AlgoTradeWithPythonWithScottPlot
                                     // ScrollBar'ın pozisyonunu güncelle (diğer plotlarda)
                                     if (plotInfo != sourcePlotInfo)
                                     {
-                                        int newValue = Math.Min(scrollPosition, plotInfo.DataScrollBar.Maximum - plotInfo.DataScrollBar.LargeChange + 1);
-                                        if (newValue >= plotInfo.DataScrollBar.Minimum && newValue <= plotInfo.DataScrollBar.Maximum)
+                                        int newValue = Math.Min(scrollPosition, plotInfo.XAxisScrollBar.Maximum - plotInfo.XAxisScrollBar.LargeChange + 1);
+                                        if (newValue >= plotInfo.XAxisScrollBar.Minimum && newValue <= plotInfo.XAxisScrollBar.Maximum)
                                         {
-                                            plotInfo.DataScrollBar.Value = newValue;
+                                            plotInfo.XAxisScrollBar.Value = newValue;
                                         }
                                     }
                                 }
@@ -1810,11 +1854,86 @@ namespace AlgoTradeWithPythonWithScottPlot
                     }
                 }
 
-                logger.Debug($"Updated all plots from scrollbar position {scrollPosition}");
+                logger.Debug($"Updated all plots from X scrollbar position {scrollPosition}");
             }
             catch (Exception ex)
             {
-                logger.Error($"Error updating all plots from scrollbar: {ex.Message}");
+                logger.Error($"Error updating all plots from X scrollbar: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Tüm plotların Y axis limitlerini Y scrollbar pozisyonuna göre günceller
+        /// </summary>
+        private void UpdateAllPlotsFromYScrollBar(int scrollPosition, PlotInfo sourcePlotInfo)
+        {
+            try
+            {
+                // Kaynak plotun verilerini kullanarak tüm plotları güncelle
+                if (sourcePlotInfo._currentYData == null || sourcePlotInfo._currentYData.Length == 0)
+                    return;
+
+                foreach (var plotInfo in plots.Values)
+                {
+                    if (plotInfo.Plot != null && plotInfo.YAxisScrollBar != null)
+                    {
+                        // Eğer bu plot'un da verisi varsa, aynı scrollbar pozisyonunu uygula
+                        if (plotInfo._currentYData != null && plotInfo._currentYData.Length > 0)
+                        {
+                            // Her plot'un kendi verisine göre görünümünü güncelle
+                            int startIndex = Math.Max(0, scrollPosition);
+                            int endIndex = Math.Min(plotInfo._currentYData.Length - 1, startIndex + plotInfo.YAxisScrollBar.LargeChange - 1);
+
+                            if (startIndex < plotInfo._currentYData.Length && endIndex < plotInfo._currentYData.Length)
+                            {
+                                double yMin = plotInfo._currentYData[startIndex];
+                                double yMax = plotInfo._currentYData[endIndex];
+
+                                if (mainForm.InvokeRequired)
+                                {
+                                    mainForm.Invoke(() =>
+                                    {
+                                        plotInfo.Plot.Plot.Axes.SetLimitsY(yMin, yMax);
+                                        plotInfo.Plot.Plot.Axes.AutoScaleX();
+                                        plotInfo.Plot.Refresh();
+
+                                        // ScrollBar'ın pozisyonunu güncelle (diğer plotlarda)
+                                        if (plotInfo != sourcePlotInfo)
+                                        {
+                                            int newValue = Math.Min(scrollPosition, plotInfo.YAxisScrollBar.Maximum - plotInfo.YAxisScrollBar.LargeChange + 1);
+                                            if (newValue >= plotInfo.YAxisScrollBar.Minimum && newValue <= plotInfo.YAxisScrollBar.Maximum)
+                                            {
+                                                plotInfo.YAxisScrollBar.Value = newValue;
+                                            }
+                                        }
+                                    });
+                                }
+                                else
+                                {
+                                    plotInfo.Plot.Plot.Axes.SetLimitsY(yMin, yMax);
+                                    plotInfo.Plot.Plot.Axes.AutoScaleX();
+                                    plotInfo.Plot.Refresh();
+
+                                    // ScrollBar'ın pozisyonunu güncelle (diğer plotlarda)
+                                    if (plotInfo != sourcePlotInfo)
+                                    {
+                                        int newValue = Math.Min(scrollPosition, plotInfo.YAxisScrollBar.Maximum - plotInfo.YAxisScrollBar.LargeChange + 1);
+                                        if (newValue >= plotInfo.YAxisScrollBar.Minimum && newValue <= plotInfo.YAxisScrollBar.Maximum)
+                                        {
+                                            plotInfo.YAxisScrollBar.Value = newValue;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                logger.Debug($"Updated all plots from Y scrollbar position {scrollPosition}");
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"Error updating all plots from Y scrollbar: {ex.Message}");
             }
         }
 
@@ -2497,8 +2616,9 @@ namespace AlgoTradeWithPythonWithScottPlot
                                     plotInfo.Plot.Plot.Axes.AutoScale();
                                 }
 
-                                // ScrollBar'ı ayarla
-                                plotInfo.SetViewRangeWithScrollBar(filterResult.ViewRange, filterResult.X, filterResult.Y);
+                                // X ScrollBar'ı ayarla
+                                plotInfo.SetXViewRangeWithScrollBar(filterResult.ViewRange, filterResult.X, filterResult.Y);
+                                // Y ScrollBar'ı şimdilik yok (gelecekte eklenebilir)
 
                                 plotInfo.Plot.Refresh();
                             });
@@ -2528,8 +2648,9 @@ namespace AlgoTradeWithPythonWithScottPlot
                                 plotInfo.Plot.Plot.Axes.AutoScale();
                             }
 
-                            // ScrollBar'ı ayarla
-                            plotInfo.SetViewRangeWithScrollBar(filterResult.ViewRange, filterResult.X, filterResult.Y);
+                            // X ScrollBar'ı ayarla
+                            plotInfo.SetXViewRangeWithScrollBar(filterResult.ViewRange, filterResult.X, filterResult.Y);
+                            // Y ScrollBar'ı şimdilik yok (gelecekte eklenebilir)
 
                             plotInfo.Plot.Refresh();
                         }

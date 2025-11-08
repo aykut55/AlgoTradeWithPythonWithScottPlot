@@ -65,11 +65,15 @@ namespace AlgoTradeWithPythonWithScottPlot
         public Button CloseButton { get; set; }
         public Button MaximizeButton { get; set; }
 
-        // Horizontal ScrollBar for data navigation
-        public HScrollBar DataScrollBar { get; set; }
+        // Horizontal ScrollBar for X-axis data navigation
+        public HScrollBar XAxisScrollBar { get; set; }
+
+        // Vertical ScrollBar for Y-axis data navigation
+        public VScrollBar YAxisScrollBar { get; set; }
 
         // ViewRange bilgisi - scrollbar için gerekli
-        private (double XMin, double XMax)? _currentViewRange;
+        private (double XMin, double XMax)? _currentXViewRange;
+        private (double YMin, double YMax)? _currentYViewRange;
         internal double[] _currentXData;
         internal double[] _currentYData;
 
@@ -308,13 +312,13 @@ namespace AlgoTradeWithPythonWithScottPlot
         }
 
         /// <summary>
-        /// ViewRange ayarlar ve scrollbar'ı yapılandırır
+        /// X ViewRange ayarlar ve X scrollbar'ı yapılandırır
         /// </summary>
-        public void SetViewRangeWithScrollBar((double XMin, double XMax)? viewRange, double[] xData, double[] yData)
+        public void SetXViewRangeWithScrollBar((double XMin, double XMax)? viewRange, double[] xData, double[] yData)
         {
-            if (Plot == null || DataScrollBar == null) return;
+            if (Plot == null || XAxisScrollBar == null) return;
 
-            _currentViewRange = viewRange;
+            _currentXViewRange = viewRange;
             _currentXData = xData;
             _currentYData = yData;
 
@@ -332,10 +336,10 @@ namespace AlgoTradeWithPythonWithScottPlot
                 }
 
                 // ScrollBar properties
-                DataScrollBar.Minimum = 0;
-                DataScrollBar.Maximum = Math.Max(0, xData.Length - 1);
-                DataScrollBar.LargeChange = Math.Max(1, visibleDataCount);
-                DataScrollBar.SmallChange = Math.Max(1, visibleDataCount / 10);
+                XAxisScrollBar.Minimum = 0;
+                XAxisScrollBar.Maximum = Math.Max(0, xData.Length - 1);
+                XAxisScrollBar.LargeChange = Math.Max(1, visibleDataCount);
+                XAxisScrollBar.SmallChange = Math.Max(1, visibleDataCount / 10);
 
                 // Şu anki pozisyonu bul (viewRange'in başlangıç noktası)
                 int currentPos = 0;
@@ -347,27 +351,78 @@ namespace AlgoTradeWithPythonWithScottPlot
                         break;
                     }
                 }
-                DataScrollBar.Value = Math.Min(currentPos, DataScrollBar.Maximum - DataScrollBar.LargeChange + 1);
+                XAxisScrollBar.Value = Math.Min(currentPos, XAxisScrollBar.Maximum - XAxisScrollBar.LargeChange + 1);
 
-                DataScrollBar.Visible = true;
+                XAxisScrollBar.Visible = true;
             }
             else
             {
                 // ViewRange yok - ScrollBar'ı gizle
-                DataScrollBar.Visible = false;
+                XAxisScrollBar.Visible = false;
             }
         }
 
         /// <summary>
-        /// ScrollBar'ın pozisyonuna göre axis limitlerini günceller
+        /// Y ViewRange ayarlar ve Y scrollbar'ı yapılandırır
         /// </summary>
-        public void UpdateViewFromScrollBar(int scrollPosition)
+        public void SetYViewRangeWithScrollBar((double YMin, double YMax)? viewRange, double[] xData, double[] yData)
+        {
+            if (Plot == null || YAxisScrollBar == null) return;
+
+            _currentYViewRange = viewRange;
+            _currentXData = xData;
+            _currentYData = yData;
+
+            if (viewRange.HasValue && yData != null && yData.Length > 0)
+            {
+                // ViewRange var - ScrollBar'ı göster ve ayarla
+                var (yMin, yMax) = viewRange.Value;
+
+                // Görünen aralıktaki data sayısını hesapla
+                int visibleDataCount = 0;
+                for (int i = 0; i < yData.Length; i++)
+                {
+                    if (yData[i] >= yMin && yData[i] <= yMax)
+                        visibleDataCount++;
+                }
+
+                // ScrollBar properties
+                YAxisScrollBar.Minimum = 0;
+                YAxisScrollBar.Maximum = Math.Max(0, yData.Length - 1);
+                YAxisScrollBar.LargeChange = Math.Max(1, visibleDataCount);
+                YAxisScrollBar.SmallChange = Math.Max(1, visibleDataCount / 10);
+
+                // Şu anki pozisyonu bul (viewRange'in başlangıç noktası)
+                int currentPos = 0;
+                for (int i = 0; i < yData.Length; i++)
+                {
+                    if (yData[i] >= yMin)
+                    {
+                        currentPos = i;
+                        break;
+                    }
+                }
+                YAxisScrollBar.Value = Math.Min(currentPos, YAxisScrollBar.Maximum - YAxisScrollBar.LargeChange + 1);
+
+                YAxisScrollBar.Visible = true;
+            }
+            else
+            {
+                // ViewRange yok - ScrollBar'ı gizle
+                YAxisScrollBar.Visible = false;
+            }
+        }
+
+        /// <summary>
+        /// X ScrollBar'ın pozisyonuna göre X axis limitlerini günceller
+        /// </summary>
+        public void UpdateXViewFromScrollBar(int scrollPosition)
         {
             if (Plot == null || _currentXData == null || _currentXData.Length == 0) return;
 
             // Scroll position'dan başlayarak LargeChange kadar veri göster
             int startIndex = Math.Max(0, scrollPosition);
-            int endIndex = Math.Min(_currentXData.Length - 1, startIndex + DataScrollBar.LargeChange - 1);
+            int endIndex = Math.Min(_currentXData.Length - 1, startIndex + XAxisScrollBar.LargeChange - 1);
 
             if (startIndex < _currentXData.Length && endIndex < _currentXData.Length)
             {
@@ -376,6 +431,28 @@ namespace AlgoTradeWithPythonWithScottPlot
 
                 Plot.Plot.Axes.SetLimitsX(xMin, xMax);
                 Plot.Plot.Axes.AutoScaleY();
+                Plot.Refresh();
+            }
+        }
+
+        /// <summary>
+        /// Y ScrollBar'ın pozisyonuna göre Y axis limitlerini günceller
+        /// </summary>
+        public void UpdateYViewFromScrollBar(int scrollPosition)
+        {
+            if (Plot == null || _currentYData == null || _currentYData.Length == 0) return;
+
+            // Scroll position'dan başlayarak LargeChange kadar veri göster
+            int startIndex = Math.Max(0, scrollPosition);
+            int endIndex = Math.Min(_currentYData.Length - 1, startIndex + YAxisScrollBar.LargeChange - 1);
+
+            if (startIndex < _currentYData.Length && endIndex < _currentYData.Length)
+            {
+                double yMin = _currentYData[startIndex];
+                double yMax = _currentYData[endIndex];
+
+                Plot.Plot.Axes.SetLimitsY(yMin, yMax);
+                Plot.Plot.Axes.AutoScaleX();
                 Plot.Refresh();
             }
         }
@@ -446,8 +523,9 @@ namespace AlgoTradeWithPythonWithScottPlot
                 CloseButton?.Dispose();
                 MaximizeButton?.Dispose();
 
-                // Dispose scrollbar
-                DataScrollBar?.Dispose();
+                // Dispose scrollbars
+                XAxisScrollBar?.Dispose();
+                YAxisScrollBar?.Dispose();
 
                 Container?.Dispose();
                 disposed = true;
