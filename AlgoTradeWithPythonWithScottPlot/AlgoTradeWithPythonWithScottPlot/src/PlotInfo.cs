@@ -70,8 +70,8 @@ namespace AlgoTradeWithPythonWithScottPlot
 
         // ViewRange bilgisi - scrollbar için gerekli
         private (double XMin, double XMax)? _currentViewRange;
-        private double[] _currentXData;
-        private double[] _currentYData;
+        internal double[] _currentXData;
+        internal double[] _currentYData;
 
         private bool disposed = false;
 

@@ -68,6 +68,7 @@ namespace AlgoTradeWithPythonWithScottPlot
         private CheckBox? syncAxisLimitsCheckBox;
         private CheckBox? enableScrollbarCheckBox;
         private CheckBox? enableCrosshairCheckBox;
+        private CheckBox? syncXAxisScrollBarCheckBox;
 
         // Zoom axis control
         public enum ZoomAxisMode
@@ -390,7 +391,18 @@ namespace AlgoTradeWithPythonWithScottPlot
                 // ScrollBar scroll event handler
                 plotInfo.DataScrollBar.Scroll += (sender, e) =>
                 {
-                    plotInfo.UpdateViewFromScrollBar(e.NewValue);
+                    bool syncScrollBar = syncXAxisScrollBarCheckBox?.Checked ?? true;
+
+                    if (syncScrollBar)
+                    {
+                        // Tüm plotları güncelle
+                        UpdateAllPlotsFromScrollBar(e.NewValue, plotInfo);
+                    }
+                    else
+                    {
+                        // Sadece bu plotu güncelle
+                        plotInfo.UpdateViewFromScrollBar(e.NewValue);
+                    }
                 };
 
                 // Create FormsPlot (with margins for zoom controls)
@@ -1629,6 +1641,19 @@ namespace AlgoTradeWithPythonWithScottPlot
                 Visible = false
             };
 
+            // Sync X Axis ScrollBar (position 8)
+            syncXAxisScrollBarCheckBox = new CheckBox
+            {
+                Name = "syncXAxisScrollBar",
+                Text = "Sync ScrollBar",
+                Size = new Size(checkBoxWidth + 20, checkBoxHeight), // Biraz daha geniş
+                Location = new Point(startX + 8 * (checkBoxWidth + margin), startY),
+                Anchor = AnchorStyles.Top | AnchorStyles.Left,
+                Checked = true, // Default enabled - tüm plotları etkilesin
+                Font = new Font("Arial", 7, FontStyle.Regular),
+                TabStop = false
+            };
+
             // Add event handler for scrollbar checkbox
             enableScrollbarCheckBox.CheckedChanged += (sender, e) => UpdateScrollbarState();
 
@@ -1644,6 +1669,7 @@ namespace AlgoTradeWithPythonWithScottPlot
             pnlTop.Controls.Add(syncAxisLimitsCheckBox);
             pnlTop.Controls.Add(enableScrollbarCheckBox);
             pnlTop.Controls.Add(enableCrosshairCheckBox);
+            pnlTop.Controls.Add(syncXAxisScrollBarCheckBox);
 
             logger.Information("Sync checkboxes created and added to pnlTop");
             
@@ -1711,6 +1737,84 @@ namespace AlgoTradeWithPythonWithScottPlot
             catch (Exception ex)
             {
                 logger.Error($"Error updating crosshair state: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Tüm plotların X axis limitlerini scrollbar pozisyonuna göre günceller
+        /// </summary>
+        private void UpdateAllPlotsFromScrollBar(int scrollPosition, PlotInfo sourcePlotInfo)
+        {
+            try
+            {
+                // Kaynak plotun verilerini kullanarak tüm plotları güncelle
+                if (sourcePlotInfo._currentXData == null || sourcePlotInfo._currentXData.Length == 0)
+                    return;
+
+                foreach (var plotInfo in plots.Values)
+                {
+                    if (plotInfo.Plot != null && plotInfo.DataScrollBar != null)
+                    {
+                        // Eğer bu plot'un da verisi varsa, aynı scrollbar pozisyonunu uygula
+                        if (plotInfo._currentXData != null && plotInfo._currentXData.Length > 0)
+                        {
+                            // Scrollbar pozisyonunu ayarla (değişikliği tetiklemeden)
+                            plotInfo.DataScrollBar.ValueChanged -= null; // Event handler'ı geçici olarak kaldırmaya gerek yok
+
+                            // Her plot'un kendi verisine göre görünümünü güncelle
+                            int startIndex = Math.Max(0, scrollPosition);
+                            int endIndex = Math.Min(plotInfo._currentXData.Length - 1, startIndex + plotInfo.DataScrollBar.LargeChange - 1);
+
+                            if (startIndex < plotInfo._currentXData.Length && endIndex < plotInfo._currentXData.Length)
+                            {
+                                double xMin = plotInfo._currentXData[startIndex];
+                                double xMax = plotInfo._currentXData[endIndex];
+
+                                if (mainForm.InvokeRequired)
+                                {
+                                    mainForm.Invoke(() =>
+                                    {
+                                        plotInfo.Plot.Plot.Axes.SetLimitsX(xMin, xMax);
+                                        plotInfo.Plot.Plot.Axes.AutoScaleY();
+                                        plotInfo.Plot.Refresh();
+
+                                        // ScrollBar'ın pozisyonunu güncelle (diğer plotlarda)
+                                        if (plotInfo != sourcePlotInfo)
+                                        {
+                                            int newValue = Math.Min(scrollPosition, plotInfo.DataScrollBar.Maximum - plotInfo.DataScrollBar.LargeChange + 1);
+                                            if (newValue >= plotInfo.DataScrollBar.Minimum && newValue <= plotInfo.DataScrollBar.Maximum)
+                                            {
+                                                plotInfo.DataScrollBar.Value = newValue;
+                                            }
+                                        }
+                                    });
+                                }
+                                else
+                                {
+                                    plotInfo.Plot.Plot.Axes.SetLimitsX(xMin, xMax);
+                                    plotInfo.Plot.Plot.Axes.AutoScaleY();
+                                    plotInfo.Plot.Refresh();
+
+                                    // ScrollBar'ın pozisyonunu güncelle (diğer plotlarda)
+                                    if (plotInfo != sourcePlotInfo)
+                                    {
+                                        int newValue = Math.Min(scrollPosition, plotInfo.DataScrollBar.Maximum - plotInfo.DataScrollBar.LargeChange + 1);
+                                        if (newValue >= plotInfo.DataScrollBar.Minimum && newValue <= plotInfo.DataScrollBar.Maximum)
+                                        {
+                                            plotInfo.DataScrollBar.Value = newValue;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                logger.Debug($"Updated all plots from scrollbar position {scrollPosition}");
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"Error updating all plots from scrollbar: {ex.Message}");
             }
         }
 
