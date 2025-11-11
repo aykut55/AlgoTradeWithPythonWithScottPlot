@@ -1,0 +1,95 @@
+{
+  "plots": [
+    {
+      "plotId": "Plot_0",
+      "plotName": "Main Chart - OHLC + MAs",
+      "height": 400,
+      "data": [
+        {
+          "dataId": 0,
+          "type": "OHLC",
+          "name": "BTC/USD",
+          "source": "D:/Data/btc_ohlc.csv",
+          "color": null
+        },
+        {
+          "dataId": 1,
+          "type": "Line",
+          "name": "MA50",
+          "source": "D:/Data/ma50.csv",
+          "color": "#FF0000"
+        },
+        {
+          "dataId": 2,
+          "type": "Line",
+          "name": "MA100",
+          "source": "D:/Data/ma100.csv",
+          "color": "#00FF00"
+        },
+        {
+          "dataId": 3,
+          "type": "Line",
+          "name": "MA200",
+          "source": "D:/Data/ma200.csv",
+          "color": "#0000FF"
+        }
+      ]
+    },
+    {
+      "plotId": "Plot_1",
+      "plotName": "Volume",
+      "height": 150,
+      "data": [
+        {
+          "dataId": 0,
+          "type": "Volume",
+          "name": "Volume",
+          "source": "D:/Data/volume.csv",
+          "color": "#4169E1"
+        }
+      ]
+    },
+    {
+      "plotId": "Plot_2",
+      "plotName": "Moving Averages",
+      "height": 200,
+      "data": [
+        {
+          "dataId": 0,
+          "type": "Line",
+          "name": "MA5",
+          "source": "D:/Data/ma5.csv",
+          "color": "#FF6347"
+        },
+        {
+          "dataId": 1,
+          "type": "Line",
+          "name": "MA8",
+          "source": "D:/Data/ma8.csv",
+          "color": "#FFD700"
+        },
+        {
+          "dataId": 2,
+          "type": "Line",
+          "name": "MA13",
+          "source": "D:/Data/ma13.csv",
+          "color": "#32CD32"
+        }
+      ]
+    },
+    {
+      "plotId": "Plot_3",
+      "plotName": "RSI",
+      "height": 150,
+      "data": [
+        {
+          "dataId": 0,
+          "type": "Line",
+          "name": "RSI",
+          "source": "D:/Data/rsi.csv",
+          "color": "#9370DB"
+        }
+      ]
+    }
+  ]
+}

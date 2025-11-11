@@ -283,9 +283,9 @@
             lblAmplitude.Size = new Size(66, 15);
             lblAmplitude.TabIndex = 4;
             lblAmplitude.Text = "Amplitude:";
-            //
+            // 
             // btnPlotAllData
-            //
+            // 
             btnPlotAllData.Location = new Point(770, 30);
             btnPlotAllData.Name = "btnPlotAllData";
             btnPlotAllData.Size = new Size(70, 23);
@@ -293,9 +293,9 @@
             btnPlotAllData.Text = "All Data";
             btnPlotAllData.UseVisualStyleBackColor = true;
             btnPlotAllData.Click += btnPlotAllData_Click;
-            //
+            // 
             // btnPlotFitScreen
-            //
+            // 
             btnPlotFitScreen.Location = new Point(845, 30);
             btnPlotFitScreen.Name = "btnPlotFitScreen";
             btnPlotFitScreen.Size = new Size(80, 23);
@@ -303,26 +303,26 @@
             btnPlotFitScreen.Text = "Fit Screen";
             btnPlotFitScreen.UseVisualStyleBackColor = true;
             btnPlotFitScreen.Click += btnPlotFitScreen_Click;
-            //
-            // lblLastN
-            //
-            lblLastN.AutoSize = true;
-            lblLastN.Location = new Point(935, 33);
-            lblLastN.Name = "lblLastN";
-            lblLastN.Size = new Size(44, 15);
-            lblLastN.TabIndex = 17;
-            lblLastN.Text = "Last N:";
-            //
+            // 
             // txtLastN
-            //
+            // 
             txtLastN.Location = new Point(985, 30);
             txtLastN.Name = "txtLastN";
             txtLastN.Size = new Size(70, 23);
             txtLastN.TabIndex = 18;
             txtLastN.Text = "100";
-            //
+            // 
+            // lblLastN
+            // 
+            lblLastN.AutoSize = true;
+            lblLastN.Location = new Point(935, 33);
+            lblLastN.Name = "lblLastN";
+            lblLastN.Size = new Size(43, 15);
+            lblLastN.TabIndex = 17;
+            lblLastN.Text = "Last N:";
+            // 
             // btnPlotLastN
-            //
+            // 
             btnPlotLastN.Location = new Point(1060, 30);
             btnPlotLastN.Name = "btnPlotLastN";
             btnPlotLastN.Size = new Size(70, 23);
@@ -330,18 +330,18 @@
             btnPlotLastN.Text = "Last N";
             btnPlotLastN.UseVisualStyleBackColor = true;
             btnPlotLastN.Click += btnPlotLastN_Click;
-            //
+            // 
             // lblZoomAxis
-            //
+            // 
             lblZoomAxis.AutoSize = true;
             lblZoomAxis.Location = new Point(1140, 33);
             lblZoomAxis.Name = "lblZoomAxis";
-            lblZoomAxis.Size = new Size(67, 15);
+            lblZoomAxis.Size = new Size(66, 15);
             lblZoomAxis.TabIndex = 20;
             lblZoomAxis.Text = "Zoom Axis:";
-            //
+            // 
             // cmbZoomAxis
-            //
+            // 
             cmbZoomAxis.DropDownStyle = ComboBoxStyle.DropDownList;
             cmbZoomAxis.FormattingEnabled = true;
             cmbZoomAxis.Items.AddRange(new object[] { "Both (X & Y)", "X Axis Only", "Y Axis Only", "None" });
@@ -349,10 +349,9 @@
             cmbZoomAxis.Name = "cmbZoomAxis";
             cmbZoomAxis.Size = new Size(110, 23);
             cmbZoomAxis.TabIndex = 21;
-            cmbZoomAxis.SelectedIndex = 0;
-            //
+            // 
             // btnLoadData
-            //
+            // 
             btnLoadData.Location = new Point(502, 63);
             btnLoadData.Name = "btnLoadData";
             btnLoadData.Size = new Size(100, 30);
@@ -397,9 +396,9 @@
             pnlLeft.Dock = DockStyle.Left;
             pnlLeft.Location = new Point(0, 151);
             pnlLeft.Name = "pnlLeft";
-            pnlLeft.Size = new Size(42, 422);
+            pnlLeft.Size = new Size(160, 422);
             pnlLeft.TabIndex = 1;
-            pnlLeft.Visible = false;
+            pnlLeft.Visible = true;
             // 
             // pnlRight
             // 
@@ -416,9 +415,9 @@
             pnlCenter.AutoScroll = true;
             pnlCenter.BackColor = Color.White;
             pnlCenter.Dock = DockStyle.Fill;
-            pnlCenter.Location = new Point(42, 151);
+            pnlCenter.Location = new Point(286, 151);
             pnlCenter.Name = "pnlCenter";
-            pnlCenter.Size = new Size(1333, 268);
+            pnlCenter.Size = new Size(1089, 268);
             pnlCenter.TabIndex = 3;
             // 
             // statusStrip1
@@ -441,9 +440,9 @@
             pnlBottom.BackColor = Color.LightYellow;
             pnlBottom.Controls.Add(pnlLogs);
             pnlBottom.Dock = DockStyle.Bottom;
-            pnlBottom.Location = new Point(42, 419);
+            pnlBottom.Location = new Point(286, 419);
             pnlBottom.Name = "pnlBottom";
-            pnlBottom.Size = new Size(1333, 154);
+            pnlBottom.Size = new Size(1089, 154);
             pnlBottom.TabIndex = 7;
             pnlBottom.Visible = false;
             // 
@@ -453,7 +452,7 @@
             pnlLogs.Dock = DockStyle.Fill;
             pnlLogs.Location = new Point(0, 0);
             pnlLogs.Name = "pnlLogs";
-            pnlLogs.Size = new Size(1333, 154);
+            pnlLogs.Size = new Size(1089, 154);
             pnlLogs.TabIndex = 4;
             pnlLogs.Visible = false;
             // 
@@ -466,7 +465,7 @@
             txtLogs.Name = "txtLogs";
             txtLogs.ReadOnly = true;
             txtLogs.ScrollBars = ScrollBars.Both;
-            txtLogs.Size = new Size(1333, 154);
+            txtLogs.Size = new Size(1089, 154);
             txtLogs.TabIndex = 0;
             // 
             // Form1
@@ -474,11 +473,11 @@
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1415, 595);
-            Controls.Add(pnlCenter);
-            Controls.Add(pnlBottom);
-            Controls.Add(pnlRight);
-            Controls.Add(pnlLeft);
             Controls.Add(pnlTop);
+            Controls.Add(pnlBottom);
+            Controls.Add(pnlLeft);
+            Controls.Add(pnlRight);
+            Controls.Add(pnlCenter);
             Controls.Add(statusStrip1);
             Controls.Add(menuStrip1);
             MainMenuStrip = menuStrip1;

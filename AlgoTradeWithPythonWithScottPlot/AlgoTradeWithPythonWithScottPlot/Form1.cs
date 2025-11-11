@@ -18,10 +18,11 @@ namespace AlgoTradeWithPythonWithScottPlot
             guiManager = new GuiManager();
             guiManager.Initialize(this);
             algoTrader = new AlgoTrader();
-            
-            // Connect GuiManager and AlgoTrader
+
+            // Connect GuiManager and AlgoTrader (bidirectional)
             algoTrader.SetGuiManager(guiManager);
-            
+            guiManager.SetAlgoTrader(algoTrader);
+
             logger.Information("Form1 initialized successfully");
             
             // Initial status (button text will be set by GuiManager.UpdateLogPanelButtonText)

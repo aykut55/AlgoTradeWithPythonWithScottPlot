@@ -32,6 +32,9 @@ namespace AlgoTradeWithPythonWithScottPlot
         private Button btnToggleLogs;
         private ToolStripMenuItem showLogsMenuItem;
 
+        // AlgoTrader reference for data loading
+        private AlgoTrader? algoTrader;
+
         // Plot management
         private readonly ConcurrentDictionary<string, PlotInfo> plots;
         private int plotCounter = 0;
@@ -71,6 +74,12 @@ namespace AlgoTradeWithPythonWithScottPlot
         private ComboBox? syncScrollBarComboBox;
         private Label? syncScrollBarLabel;
 
+        // Left panel controls for JSON config
+        private TextBox? txtJsonConfigPath;
+        private Button? btnGenerateDemoData;
+        private Button? btnReadConfig;
+        private Button? btnPlotData;
+
         // Zoom axis control
         public enum ZoomAxisMode
         {
@@ -106,11 +115,20 @@ namespace AlgoTradeWithPythonWithScottPlot
             // Create global control buttons
             CreateGlobalControls();
 
+            // Create left panel controls for JSON config
+            CreateLeftPanelControls();
+
             // Prevent mouse wheel scrolling on center panel when over plots
             if (pnlCenter != null)
             {
                 pnlCenter.MouseWheel += PnlCenter_MouseWheel;
             }
+        }
+
+        public void SetAlgoTrader(AlgoTrader trader)
+        {
+            algoTrader = trader;
+            logger.Information("AlgoTrader reference set in GuiManager");
         }
 
         private void CacheControlReferences()
@@ -1738,7 +1756,32 @@ namespace AlgoTradeWithPythonWithScottPlot
             pnlTop.Controls.Add(syncScrollBarComboBox);
 
             logger.Information("Sync checkboxes created and added to pnlTop");
-            
+
+            // Bring all controls to front to ensure visibility
+            syncZoomCheckBox?.BringToFront();
+            syncPanCheckBox?.BringToFront();
+            syncMouseWheelCheckBox?.BringToFront();
+            syncResetCheckBox?.BringToFront();
+            syncMouseDragCheckBox?.BringToFront();
+            syncAxisLimitsCheckBox?.BringToFront();
+            enableScrollbarCheckBox?.BringToFront();
+            enableCrosshairCheckBox?.BringToFront();
+            syncScrollBarLabel?.BringToFront();
+            syncScrollBarComboBox?.BringToFront();
+
+            // Bring all global buttons to front
+            globalYPanUpButton?.BringToFront();
+            globalYZoomInButton?.BringToFront();
+            globalYZoomOutButton?.BringToFront();
+            globalYPanDownButton?.BringToFront();
+            globalXPanLeftButton?.BringToFront();
+            globalXZoomInButton?.BringToFront();
+            globalXZoomOutButton?.BringToFront();
+            globalXPanRightButton?.BringToFront();
+            globalResetYButton?.BringToFront();
+            globalResetButton?.BringToFront();
+            globalResetXButton?.BringToFront();
+
             // Initialize scrollbar state
             UpdateScrollbarState();
         }
@@ -1770,6 +1813,180 @@ namespace AlgoTradeWithPythonWithScottPlot
             catch (Exception ex)
             {
                 logger.Error($"Error updating scrollbar state: {ex.Message}");
+            }
+        }
+
+        private void CreateLeftPanelControls()
+        {
+            if (pnlLeft == null) return;
+
+            // Panel is already visible in Designer, no need to set visibility
+
+            const int margin = 10;
+            int currentY = margin;
+
+            // Label for JSON config path
+            Label lblJsonPath = new Label
+            {
+                Text = "JSON Config Path:",
+                Location = new Point(margin, currentY),
+                AutoSize = true,
+                Font = new Font("Arial", 8, FontStyle.Bold)
+            };
+            pnlLeft.Controls.Add(lblJsonPath);
+            currentY += 20;
+
+            // TextBox for JSON file path
+            txtJsonConfigPath = new TextBox
+            {
+                Name = "txtJsonConfigPath",
+                Location = new Point(margin, currentY),
+                Size = new Size(pnlLeft.Width - 2 * margin, 60),
+                Multiline = true,
+                ScrollBars = ScrollBars.Vertical,
+                Text = "D:/config/sample_plot_config.json",
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
+            };
+            pnlLeft.Controls.Add(txtJsonConfigPath);
+            currentY += 65;
+
+            // Generate Demo Data button (full width)
+            btnGenerateDemoData = new Button
+            {
+                Name = "btnGenerateDemoData",
+                Text = "Generate Demo Data",
+                Location = new Point(margin, currentY),
+                Size = new Size(pnlLeft.Width - 2 * margin, 30),
+                BackColor = Color.LightYellow,
+                Font = new Font("Arial", 8, FontStyle.Bold),
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
+            };
+            btnGenerateDemoData.Click += BtnGenerateDemoData_Click;
+            pnlLeft.Controls.Add(btnGenerateDemoData);
+            currentY += 35;
+
+            // ReadConfig and PlotData buttons side by side
+            int buttonWidth = (pnlLeft.Width - 3 * margin) / 2;
+
+            btnReadConfig = new Button
+            {
+                Name = "btnReadConfig",
+                Text = "Read Config",
+                Location = new Point(margin, currentY),
+                Size = new Size(buttonWidth, 30),
+                BackColor = Color.LightGreen,
+                Font = new Font("Arial", 8, FontStyle.Bold),
+                Anchor = AnchorStyles.Top | AnchorStyles.Left
+            };
+            btnReadConfig.Click += BtnReadConfig_Click;
+            pnlLeft.Controls.Add(btnReadConfig);
+
+            btnPlotData = new Button
+            {
+                Name = "btnPlotData",
+                Text = "Plot Data",
+                Location = new Point(margin + buttonWidth + margin, currentY),
+                Size = new Size(buttonWidth, 30),
+                BackColor = Color.LightCoral,
+                Font = new Font("Arial", 8, FontStyle.Bold),
+                Anchor = AnchorStyles.Top | AnchorStyles.Left
+            };
+            btnPlotData.Click += BtnPlotData_Click;
+            pnlLeft.Controls.Add(btnPlotData);
+
+            logger.Information("Left panel controls created successfully");
+        }
+
+        private void BtnGenerateDemoData_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                logger.Information("Generate Demo Data button clicked");
+                UpdateStatus("Generating demo data...");
+
+                // Create demo data generator
+                var generator = new DemoDataGenerator
+                {
+                    DataPointCount = 1000,
+                    InitialPrice = 100.0,
+                    OutputDirectory = "D:/DemoData"
+                };
+
+                // Generate all data files
+                generator.GenerateAllData();
+
+                // Generate JSON config
+                generator.GenerateJsonConfig();
+
+                // Update textbox with config path
+                if (txtJsonConfigPath != null)
+                {
+                    txtJsonConfigPath.Text = "D:/DemoData/demo_config.json";
+                }
+
+                UpdateStatus("Demo data generated successfully!");
+                logger.Information("Demo data generation completed");
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"Error generating demo data: {ex.Message}");
+                UpdateStatus($"Error: {ex.Message}");
+            }
+        }
+
+        private void BtnReadConfig_Click(object sender, EventArgs e)
+        {
+            logger.Information("Read Config button clicked");
+            // TODO: Implement config reading logic
+        }
+
+        private void BtnPlotData_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                logger.Information("Plot Data button clicked");
+
+                if (algoTrader == null)
+                {
+                    logger.Warning("AlgoTrader reference not set");
+                    UpdateStatus("Error: AlgoTrader not initialized");
+                    return;
+                }
+
+                if (txtJsonConfigPath == null || string.IsNullOrWhiteSpace(txtJsonConfigPath.Text))
+                {
+                    logger.Warning("JSON config path is empty");
+                    UpdateStatus("Error: JSON config path is empty");
+                    return;
+                }
+
+                string configPath = txtJsonConfigPath.Text.Trim();
+                if (!File.Exists(configPath))
+                {
+                    logger.Warning($"JSON config file not found: {configPath}");
+                    UpdateStatus($"Error: Config file not found");
+                    return;
+                }
+
+                UpdateStatus("Loading data from config...");
+
+                // Remove all existing plots first
+                logger.Information("Removing all plots before loading new data");
+                foreach (var plotId in plots.Keys.ToList())
+                {
+                    DeletePlot(plotId);
+                }
+
+                // Load data from config
+                algoTrader.LoadDataFromConfig(configPath);
+
+                UpdateStatus("Data loaded successfully!");
+                logger.Information("Data plotting completed");
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"Error plotting data: {ex.Message}");
+                UpdateStatus($"Error: {ex.Message}");
             }
         }
 
