@@ -341,12 +341,10 @@ namespace AlgoTradeWithPythonWithScottPlot
         // Plot Management Methods
         public string AddPlot(string id = null, DockStyle dock = DockStyle.Top, Panel parentPanel = null, int height = 0)
         {
-            // Determine if this is the main plot or secondary plot
-            bool isMainPlot = plots.Count == 0;
-            
+            // Auto-generate ID if not provided
             if (string.IsNullOrEmpty(id))
             {
-                if (isMainPlot)
+                if (plots.Count == 0)
                 {
                     id = MAIN_PLOT_ID;
                 }
@@ -361,6 +359,9 @@ namespace AlgoTradeWithPythonWithScottPlot
                 logger.Warning($"Plot with ID '{id}' already exists");
                 return null;
             }
+
+            // Determine if this is the main plot based on ID (not plot count!)
+            bool isMainPlot = (id == MAIN_PLOT_ID);
 
             // Set height based on plot type
             if (height == 0)
@@ -458,6 +459,10 @@ namespace AlgoTradeWithPythonWithScottPlot
                     Dock = DockStyle.Fill,  // Fill ile scrollbar'ın üstünü doldurur
                     DisplayScale = 1F
                 };
+
+                // Set plot margins to ensure Y-axis labels are visible
+                plotInfo.Plot.Plot.Layout.Frameless();
+                plotInfo.Plot.Plot.Layout.Fixed(new ScottPlot.PixelPadding(80, 20, 40, 40)); // Left, Right, Bottom, Top
 
                 // Create zoom controls
                 CreateZoomControls(plotInfo);
@@ -902,17 +907,37 @@ namespace AlgoTradeWithPythonWithScottPlot
         {
             var plot = plotInfo.Plot.Plot;
             var currentLimits = plot.Axes.GetLimits();
-            
-            double centerY = (currentLimits.Bottom + currentLimits.Top) / 2;
-            double rangeY = (currentLimits.Top - currentLimits.Bottom) * factor;
-            
-            double newBottom = centerY - rangeY / 2;
-            double newTop = centerY + rangeY / 2;
-            
-            plot.Axes.SetLimitsY(newBottom, newTop);
+
+            // Plot türüne göre Y-axis kısıtlamaları uygula
+            string plotNameLower = plotInfo.PlotName.ToLowerInvariant();
+
+            if (plotNameLower.Contains("volume"))
+            {
+                // Volume plot: Y-axis 0'dan başlamalı, sadece top'u zoom yap
+                double rangeY = currentLimits.Top * factor;
+                plot.Axes.SetLimitsY(0, rangeY);
+                logger.Debug($"Y zoom applied to Volume plot {plotInfo.Id}: factor={factor}, range=[0, {rangeY:F2}]");
+            }
+            else if (plotNameLower.Contains("rsi"))
+            {
+                // RSI plot: Y-axis 0-100 sabit, zoom yapma!
+                plot.Axes.SetLimitsY(0, 100);
+                logger.Debug($"Y zoom blocked for RSI plot {plotInfo.Id}: Y-axis fixed at [0, 100]");
+            }
+            else
+            {
+                // Normal zoom (OHLC ve diğerleri için)
+                double centerY = (currentLimits.Bottom + currentLimits.Top) / 2;
+                double rangeY = (currentLimits.Top - currentLimits.Bottom) * factor;
+
+                double newBottom = centerY - rangeY / 2;
+                double newTop = centerY + rangeY / 2;
+
+                plot.Axes.SetLimitsY(newBottom, newTop);
+                logger.Debug($"Y zoom applied to plot {plotInfo.Id}: factor={factor}, range={newBottom:F2} to {newTop:F2}");
+            }
+
             plotInfo.Plot.Refresh();
-            
-            logger.Debug($"Y zoom applied to plot {plotInfo.Id}: factor={factor}, range={newBottom:F2} to {newTop:F2}");
         }
 
         private void PnlCenter_MouseWheel(object? sender, MouseEventArgs e)
@@ -1936,15 +1961,9 @@ namespace AlgoTradeWithPythonWithScottPlot
 
         private void BtnReadConfig_Click(object sender, EventArgs e)
         {
-            logger.Information("Read Config button clicked");
-            // TODO: Implement config reading logic
-        }
-
-        private void BtnPlotData_Click(object sender, EventArgs e)
-        {
             try
             {
-                logger.Information("Plot Data button clicked");
+                logger.Information("Read Config button clicked");
 
                 if (algoTrader == null)
                 {
@@ -1968,20 +1987,47 @@ namespace AlgoTradeWithPythonWithScottPlot
                     return;
                 }
 
-                UpdateStatus("Loading data from config...");
+                UpdateStatus("Reading config and creating plots...");
 
-                // Remove all existing plots first
-                logger.Information("Removing all plots before loading new data");
+                // Mevcut tüm plotları sil
+                logger.Information("Removing all existing plots before creating new ones");
                 foreach (var plotId in plots.Keys.ToList())
                 {
                     DeletePlot(plotId);
                 }
 
-                // Load data from config
-                algoTrader.LoadDataFromConfig(configPath);
+                // Config'i oku ve sadece boş plotları oluştur (data yükleme!)
+                algoTrader.CreatePlotsFromConfig(configPath);
 
-                UpdateStatus("Data loaded successfully!");
-                logger.Information("Data plotting completed");
+                UpdateStatus("Plots created. Ready to load data.");
+                logger.Information("Plot creation completed");
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"Error reading config: {ex.Message}");
+                UpdateStatus($"Error: {ex.Message}");
+            }
+        }
+
+        private void BtnPlotData_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                logger.Information("Plot Data button clicked");
+
+                if (algoTrader == null)
+                {
+                    logger.Warning("AlgoTrader reference not set");
+                    UpdateStatus("Error: AlgoTrader not initialized");
+                    return;
+                }
+
+                UpdateStatus("Loading data to plots...");
+
+                // Mevcut plotlara verileri yükle (Read butonu ile oluşturulmuş olmalı)
+                algoTrader.LoadDataToPlots();
+
+                logger.Information("Data loading completed");
             }
             catch (Exception ex)
             {
@@ -2739,26 +2785,28 @@ namespace AlgoTradeWithPythonWithScottPlot
                     {
                         mainForm.Invoke(() =>
                         {
-                            plotInfo.Plot.Plot.Clear();
-
-                            // Recreate crosshair after clear
-                            plotInfo.Crosshair = plotInfo.Plot.Plot.Add.Crosshair(0, 0);
-                            plotInfo.Crosshair.IsVisible = enableCrosshairCheckBox?.Checked ?? true;
-                            plotInfo.Crosshair.LineColor = SPColors.Red;
-                            plotInfo.Crosshair.LineWidth = 1;
+                            // Clear data but keep Crosshair
+                            var plottablesToRemove = plotInfo.Plot.Plot.GetPlottables()
+                                .Where(p => !(p is ScottPlot.Plottables.Crosshair))
+                                .ToList();
+                            foreach (var plottable in plottablesToRemove)
+                            {
+                                plotInfo.Plot.Plot.Remove(plottable);
+                            }
 
                             plotInfo.Plot.Refresh();
                         });
                     }
                     else
                     {
-                        plotInfo.Plot.Plot.Clear();
-
-                        // Recreate crosshair after clear
-                        plotInfo.Crosshair = plotInfo.Plot.Plot.Add.Crosshair(0, 0);
-                        plotInfo.Crosshair.IsVisible = enableCrosshairCheckBox?.Checked ?? true;
-                        plotInfo.Crosshair.LineColor = SPColors.Red;
-                        plotInfo.Crosshair.LineWidth = 1;
+                        // Clear data but keep Crosshair
+                        var plottablesToRemove = plotInfo.Plot.Plot.GetPlottables()
+                            .Where(p => !(p is ScottPlot.Plottables.Crosshair))
+                            .ToList();
+                        foreach (var plottable in plottablesToRemove)
+                        {
+                            plotInfo.Plot.Plot.Remove(plottable);
+                        }
 
                         plotInfo.Plot.Refresh();
                     }
@@ -2832,16 +2880,24 @@ namespace AlgoTradeWithPythonWithScottPlot
                         {
                             mainForm.Invoke(() =>
                             {
-                                plotInfo.Plot.Plot.Clear();
+                                // Clear data but keep Crosshair
+                                var plottablesToRemove = plotInfo.Plot.Plot.GetPlottables()
+                                    .Where(p => !(p is ScottPlot.Plottables.Crosshair))
+                                    .ToList();
+                                foreach (var plottable in plottablesToRemove)
+                                {
+                                    plotInfo.Plot.Plot.Remove(plottable);
+                                }
 
                                 // Use adaptive plotting based on data size
                                 AddAdaptivePlot(plotInfo.Plot, filterResult.X, filterResult.Y, plotInfo.Id);
 
-                                // Recreate crosshair after clear
-                                plotInfo.Crosshair = plotInfo.Plot.Plot.Add.Crosshair(0, 0);
-                                plotInfo.Crosshair.IsVisible = enableCrosshairCheckBox?.Checked ?? true;
-                                plotInfo.Crosshair.LineColor = SPColors.Red;
-                                plotInfo.Crosshair.LineWidth = 1;
+                                // Crosshair is preserved, no need to recreate
+                                // Just update its visibility based on checkbox
+                                if (plotInfo.Crosshair != null)
+                                {
+                                    plotInfo.Crosshair.IsVisible = enableCrosshairCheckBox?.Checked ?? true;
+                                }
 
                                 // ViewRange varsa axis limitlerini ayarla, yoksa AutoScale
                                 if (filterResult.ViewRange.HasValue)

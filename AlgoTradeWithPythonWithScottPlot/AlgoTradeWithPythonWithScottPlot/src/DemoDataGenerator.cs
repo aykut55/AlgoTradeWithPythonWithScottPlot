@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Serilog;
@@ -39,7 +40,7 @@ namespace AlgoTradeWithPythonWithScottPlot
                        new[] { "Timestamp", "Open", "High", "Low", "Close" });
 
             // Close fiyatlarını extract et (MA ve RSI için)
-            var closePrices = ohlcData.Select(row => double.Parse(row[4])).ToArray();
+            var closePrices = ohlcData.Select(row => double.Parse(row[4], CultureInfo.InvariantCulture)).ToArray();
 
             // 2. Volume data üret
             var volumeData = GenerateVolumeData();
@@ -96,9 +97,9 @@ namespace AlgoTradeWithPythonWithScottPlot
             string jsonContent = @"{
   ""plots"": [
     {
-      ""plotId"": ""Plot_OHLC"",
+      ""plotId"": ""0"",
       ""plotName"": ""Main Chart - OHLC + MAs"",
-      ""height"": 400,
+      ""height"": 600,
       ""data"": [
         {
           ""dataId"": 0,
@@ -152,9 +153,9 @@ namespace AlgoTradeWithPythonWithScottPlot
       ]
     },
     {
-      ""plotId"": ""Plot_Volume"",
+      ""plotId"": ""Plot_1"",
       ""plotName"": ""Volume"",
-      ""height"": 150,
+      ""height"": 500,
       ""data"": [
         {
           ""dataId"": 0,
@@ -166,9 +167,9 @@ namespace AlgoTradeWithPythonWithScottPlot
       ]
     },
     {
-      ""plotId"": ""Plot_RSI"",
+      ""plotId"": ""Plot_2"",
       ""plotName"": ""RSI (14)"",
-      ""height"": 150,
+      ""height"": 500,
       ""data"": [
         {
           ""dataId"": 0,
@@ -228,10 +229,10 @@ namespace AlgoTradeWithPythonWithScottPlot
                 data.Add(new[]
                 {
                     timestamp.ToString("yyyy-MM-dd HH:mm:ss"),
-                    open.ToString("F2"),
-                    high.ToString("F2"),
-                    low.ToString("F2"),
-                    close.ToString("F2")
+                    open.ToString("F2", CultureInfo.InvariantCulture),
+                    high.ToString("F2", CultureInfo.InvariantCulture),
+                    low.ToString("F2", CultureInfo.InvariantCulture),
+                    close.ToString("F2", CultureInfo.InvariantCulture)
                 });
 
                 price = close;
@@ -253,7 +254,7 @@ namespace AlgoTradeWithPythonWithScottPlot
                 data.Add(new[]
                 {
                     timestamp.ToString("yyyy-MM-dd HH:mm:ss"),
-                    volume.ToString("F0")
+                    volume.ToString("F0", CultureInfo.InvariantCulture)
                 });
             }
 
@@ -366,7 +367,7 @@ namespace AlgoTradeWithPythonWithScottPlot
                 data.Add(new[]
                 {
                     timestamp.ToString("yyyy-MM-dd HH:mm:ss"),
-                    values[i].ToString("F2")
+                    values[i].ToString("F2", CultureInfo.InvariantCulture)
                 });
             }
 

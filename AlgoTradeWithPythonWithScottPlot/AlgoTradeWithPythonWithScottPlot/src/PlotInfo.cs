@@ -21,6 +21,7 @@ namespace AlgoTradeWithPythonWithScottPlot
         public DateTime CreatedAt { get; set; }
         public string Title { get; set; }
         public Color BackgroundColor { get; set; }
+        public string PlotName { get; set; } = string.Empty; // Plot name for Y-axis constraint checks
 
         // Crosshair reference
         public Crosshair Crosshair { get; set; }

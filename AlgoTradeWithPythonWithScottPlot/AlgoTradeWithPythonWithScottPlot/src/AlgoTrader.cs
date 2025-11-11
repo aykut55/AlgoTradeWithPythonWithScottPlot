@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -15,6 +16,7 @@ namespace AlgoTradeWithPythonWithScottPlot
         private GuiManager guiManager;
         private bool disposed = false;
         private readonly ILogger logger = Log.ForContext<AlgoTrader>();
+        private PlotConfiguration? loadedConfig = null; // Okunan JSON config'i sakla
 
         public AlgoTrader()
         {
@@ -115,7 +117,201 @@ namespace AlgoTradeWithPythonWithScottPlot
         // ========== DATA LOADING FROM CONFIG ==========
 
         /// <summary>
-        /// JSON config dosyasından plotları ve dataları yükler
+        /// JSON config dosyasını okur ve sadece plotları oluşturur (data yüklemez)
+        /// </summary>
+        public void CreatePlotsFromConfig(string configFilePath)
+        {
+            try
+            {
+                logger.Information($"Reading config and creating plots: {configFilePath}");
+                guiManager?.UpdateStatus($"Reading config: {configFilePath}");
+
+                // JSON dosyasını oku
+                string jsonContent = File.ReadAllText(configFilePath);
+                loadedConfig = JsonSerializer.Deserialize<PlotConfiguration>(jsonContent, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+                if (loadedConfig == null || loadedConfig.Plots == null || loadedConfig.Plots.Count == 0)
+                {
+                    logger.Warning("Config file is empty or invalid");
+                    guiManager?.UpdateStatus("Config file is empty");
+                    return;
+                }
+
+                logger.Information($"Config loaded: {loadedConfig.Plots.Count} plots defined");
+
+                // Her plot için sadece boş plot penceresi oluştur
+                foreach (var plotDef in loadedConfig.Plots)
+                {
+                    logger.Information($"Creating empty plot: {plotDef.PlotId} - {plotDef.PlotName}");
+
+                    // Plot'u oluştur (AddPlot ile)
+                    string createdId = guiManager?.AddPlot(plotDef.PlotId, System.Windows.Forms.DockStyle.Top, height: plotDef.Height);
+
+                    if (string.IsNullOrEmpty(createdId))
+                    {
+                        logger.Error($"Failed to create plot: {plotDef.PlotId}");
+                        continue;
+                    }
+
+                    // Plot'u al
+                    var plot = guiManager?.GetPlot(createdId);
+                    if (plot == null)
+                    {
+                        logger.Error($"Failed to get FormsPlot for: {createdId}");
+                        continue;
+                    }
+
+                    // Sadece başlığı set et (data ekleme!)
+                    plot.Plot.Title(plotDef.PlotName);
+                    plot.Refresh();
+
+                    logger.Information($"Empty plot {createdId} created with title: {plotDef.PlotName}");
+                }
+
+                logger.Information($"Plot creation completed: {loadedConfig.Plots.Count} plots created");
+                guiManager?.UpdateStatus($"Created {loadedConfig.Plots.Count} empty plots");
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"Error creating plots from config: {ex.Message}");
+                guiManager?.UpdateStatus($"Error: {ex.Message}");
+                loadedConfig = null;
+            }
+        }
+
+        /// <summary>
+        /// Önceden oluşturulmuş plotlara, loadedConfig'den verileri yükler
+        /// </summary>
+        public void LoadDataToPlots()
+        {
+            try
+            {
+                if (loadedConfig == null || loadedConfig.Plots == null || loadedConfig.Plots.Count == 0)
+                {
+                    logger.Warning("No config loaded. Please use Read button first.");
+                    guiManager?.UpdateStatus("Error: No config loaded");
+                    return;
+                }
+
+                logger.Information($"Loading data to {loadedConfig.Plots.Count} plots");
+                guiManager?.UpdateStatus("Loading data to plots...");
+
+                // Her plot için
+                foreach (var plotDef in loadedConfig.Plots)
+                {
+                    logger.Information($"Loading data to plot: {plotDef.PlotId}");
+
+                    // Plot'u al (GetPlot ile FormsPlot)
+                    var plot = guiManager?.GetPlot(plotDef.PlotId);
+                    if (plot == null)
+                    {
+                        logger.Warning($"Plot not found: {plotDef.PlotId}. Was it created with Read button?");
+                        continue;
+                    }
+
+                    // PlotInfo'ya PlotName'i kaydet (zoom sırasında Y-axis kuralları için)
+                    var plotInfo = guiManager?.GetPlotInfo(plotDef.PlotId);
+                    if (plotInfo != null)
+                    {
+                        plotInfo.PlotName = plotDef.PlotName;
+                    }
+
+                    // Plot'u temizle ama Crosshair'ı koru!
+                    // Clear() yerine sadece data plottable'larını sil
+                    var plottablesToRemove = plot.Plot.GetPlottables()
+                        .Where(p => !(p is ScottPlot.Plottables.Crosshair))
+                        .ToList();
+                    foreach (var plottable in plottablesToRemove)
+                    {
+                        plot.Plot.Remove(plottable);
+                    }
+
+                    // Her data serisi için
+                    foreach (var dataDef in plotDef.Data.OrderBy(d => d.DataId))
+                    {
+                        logger.Information($"  Loading data: {dataDef.Name} (Type: {dataDef.Type}, Source: {dataDef.Source})");
+                        string typeUpper = dataDef.Type.ToUpperInvariant();
+                        logger.Information($"  Type after ToUpperInvariant: '{typeUpper}'");
+
+                        try
+                        {
+                            // Data tipine göre işle ve plot'a ekle
+                            switch (typeUpper)
+                            {
+                                case "OHLC":
+                                    LoadOHLCDataToPlot(plot, dataDef);
+                                    break;
+
+                                case "VOLUME":
+                                    LoadVolumeDataToPlot(plot, dataDef);
+                                    break;
+
+                                case "LINE":
+                                    // AddAdaptivePlotPublic kullan (addPlotToolStripMenuItem_Click yaklaşımı)
+                                    LoadLineDataToPlot(plot, dataDef, plotDef.PlotId);
+                                    break;
+
+                                case "HISTOGRAM":
+                                    LoadHistogramDataToPlot(plot, dataDef);
+                                    break;
+
+                                default:
+                                    logger.Warning($"Unknown data type: {dataDef.Type}");
+                                    break;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.Error($"Error loading data {dataDef.Name}: {ex.Message}");
+                            guiManager?.UpdateStatus($"Error loading {dataDef.Name}");
+                        }
+                    }
+
+                    // Plot başlığını yeniden set et
+                    plot.Plot.Title(plotDef.PlotName);
+
+                    // Crosshair zaten AddPlot'ta eklendi ve korundu, tekrar eklemeye gerek yok
+
+                    // AutoScale
+                    plot.Plot.Axes.AutoScale();
+
+                    // Plot türüne göre Y-axis limitlerini ayarla
+                    string plotNameLower = plotDef.PlotName.ToLowerInvariant();
+                    if (plotNameLower.Contains("volume"))
+                    {
+                        // Volume plot: Y-axis 0'dan başlamalı
+                        var currentLimits = plot.Plot.Axes.GetLimits();
+                        plot.Plot.Axes.SetLimitsY(0, currentLimits.Top);
+                        logger.Information($"Volume plot Y-axis adjusted: [0, {currentLimits.Top:F2}]");
+                    }
+                    else if (plotNameLower.Contains("rsi"))
+                    {
+                        // RSI plot: Y-axis 0-100 sabit
+                        var currentLimits = plot.Plot.Axes.GetLimits();
+                        plot.Plot.Axes.SetLimits(currentLimits.Left, currentLimits.Right, 0, 100);
+                        logger.Information($"RSI plot Y-axis fixed: [0, 100]");
+                    }
+
+                    plot.Refresh();
+
+                    logger.Information($"Data loading completed for plot: {plotDef.PlotId}");
+                }
+
+                logger.Information("All data loaded successfully");
+                guiManager?.UpdateStatus($"Loaded data to {loadedConfig.Plots.Count} plots successfully");
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"Error loading data to plots: {ex.Message}");
+                guiManager?.UpdateStatus($"Error: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// JSON config dosyasından plotları ve dataları yükler (ESKİ METOD - şimdi kullanılmıyor)
         /// </summary>
         public void LoadDataFromConfig(string configFilePath)
         {
@@ -166,11 +362,13 @@ namespace AlgoTradeWithPythonWithScottPlot
                     foreach (var dataDef in plotDef.Data.OrderBy(d => d.DataId))
                     {
                         logger.Information($"  Loading data: {dataDef.Name} (Type: {dataDef.Type}, Source: {dataDef.Source})");
+                        string typeUpper = dataDef.Type.ToUpperInvariant();
+                        logger.Information($"  Type after ToUpperInvariant: '{typeUpper}'");
 
                         try
                         {
                             // Data tipine göre işle ve plot'a ekle
-                            switch (dataDef.Type.ToUpper())
+                            switch (typeUpper)
                             {
                                 case "OHLC":
                                     LoadOHLCDataToPlot(plot, dataDef);
@@ -269,10 +467,10 @@ namespace AlgoTradeWithPythonWithScottPlot
                 var parts = line.Split(',');
                 if (parts.Length >= 5)
                 {
-                    double open = double.Parse(parts[1]);
-                    double high = double.Parse(parts[2]);
-                    double low = double.Parse(parts[3]);
-                    double close = double.Parse(parts[4]);
+                    double open = double.Parse(parts[1], CultureInfo.InvariantCulture);
+                    double high = double.Parse(parts[2], CultureInfo.InvariantCulture);
+                    double low = double.Parse(parts[3], CultureInfo.InvariantCulture);
+                    double close = double.Parse(parts[4], CultureInfo.InvariantCulture);
                     DateTime timestamp = DateTime.Parse(parts[0]);
                     TimeSpan span = TimeSpan.FromDays(1); // Default 1 gün bar süresi
 
@@ -294,15 +492,18 @@ namespace AlgoTradeWithPythonWithScottPlot
             var positions = new List<double>();
             var lines = File.ReadAllLines(dataDef.Source).Skip(1); // Skip header
 
-            int index = 0;
             foreach (var line in lines)
             {
                 var parts = line.Split(',');
                 if (parts.Length >= 2)
                 {
-                    double volume = double.Parse(parts[1]);
-                    volumes.Add(volume);
-                    positions.Add(index++);
+                    // Parse timestamp and convert to OADate for consistent x-axis
+                    if (DateTime.TryParse(parts[0], out DateTime timestamp))
+                    {
+                        double volume = double.Parse(parts[1], CultureInfo.InvariantCulture);
+                        volumes.Add(volume);
+                        positions.Add(timestamp.ToOADate());
+                    }
                 }
             }
 
@@ -320,15 +521,17 @@ namespace AlgoTradeWithPythonWithScottPlot
             var yData = new List<double>();
             var lines = File.ReadAllLines(dataDef.Source).Skip(1); // Skip header
 
-            int index = 0;
             foreach (var line in lines)
             {
                 var parts = line.Split(',');
                 if (parts.Length >= 2)
                 {
-                    // X değeri timestamp ise index kullan, değilse parse et
-                    xData.Add(index++);
-                    yData.Add(double.Parse(parts[1]));
+                    // Parse timestamp from CSV and convert to OADate (same as OHLC)
+                    if (DateTime.TryParse(parts[0], out DateTime timestamp))
+                    {
+                        xData.Add(timestamp.ToOADate());
+                        yData.Add(double.Parse(parts[1], CultureInfo.InvariantCulture));
+                    }
                 }
             }
 
@@ -389,14 +592,17 @@ namespace AlgoTradeWithPythonWithScottPlot
             var positions = new List<double>();
             var lines = File.ReadAllLines(dataDef.Source).Skip(1); // Skip header
 
-            int index = 0;
             foreach (var line in lines)
             {
                 var parts = line.Split(',');
                 if (parts.Length >= 2)
                 {
-                    values.Add(double.Parse(parts[1]));
-                    positions.Add(index++);
+                    // Parse timestamp and convert to OADate for consistent x-axis
+                    if (DateTime.TryParse(parts[0], out DateTime timestamp))
+                    {
+                        values.Add(double.Parse(parts[1], CultureInfo.InvariantCulture));
+                        positions.Add(timestamp.ToOADate());
+                    }
                 }
             }
 
@@ -427,10 +633,10 @@ namespace AlgoTradeWithPythonWithScottPlot
                 var parts = line.Split(',');
                 if (parts.Length >= 5)
                 {
-                    double open = double.Parse(parts[1]);
-                    double high = double.Parse(parts[2]);
-                    double low = double.Parse(parts[3]);
-                    double close = double.Parse(parts[4]);
+                    double open = double.Parse(parts[1], CultureInfo.InvariantCulture);
+                    double high = double.Parse(parts[2], CultureInfo.InvariantCulture);
+                    double low = double.Parse(parts[3], CultureInfo.InvariantCulture);
+                    double close = double.Parse(parts[4], CultureInfo.InvariantCulture);
                     DateTime timestamp = DateTime.Parse(parts[0]);
                     TimeSpan span = TimeSpan.FromDays(1); // Default 1 gün bar süresi
 
@@ -464,19 +670,22 @@ namespace AlgoTradeWithPythonWithScottPlot
                 fillColor = ScottPlot.Color.FromColor(color).WithAlpha(0.5);
             }
 
-            int index = 0;
             foreach (var line in lines)
             {
                 var parts = line.Split(',');
                 if (parts.Length >= 2)
                 {
-                    double volume = double.Parse(parts[1]);
-                    bars.Add(new ScottPlot.Bar
+                    // Parse timestamp and convert to OADate for consistent x-axis
+                    if (DateTime.TryParse(parts[0], out DateTime timestamp))
                     {
-                        Position = index++,
-                        Value = volume,
-                        FillColor = fillColor
-                    });
+                        double volume = double.Parse(parts[1], CultureInfo.InvariantCulture);
+                        bars.Add(new ScottPlot.Bar
+                        {
+                            Position = timestamp.ToOADate(),
+                            Value = volume,
+                            FillColor = fillColor
+                        });
+                    }
                 }
             }
 
@@ -502,15 +711,17 @@ namespace AlgoTradeWithPythonWithScottPlot
             var yData = new List<double>();
             var lines = File.ReadAllLines(dataDef.Source).Skip(1); // Skip header
 
-            int index = 0;
             foreach (var line in lines)
             {
                 var parts = line.Split(',');
                 if (parts.Length >= 2)
                 {
-                    // X değeri timestamp ise index kullan, değilse parse et
-                    xData.Add(index++);
-                    yData.Add(double.Parse(parts[1]));
+                    // Parse timestamp from CSV and convert to OADate (same as OHLC)
+                    if (DateTime.TryParse(parts[0], out DateTime timestamp))
+                    {
+                        xData.Add(timestamp.ToOADate());
+                        yData.Add(double.Parse(parts[1], CultureInfo.InvariantCulture));
+                    }
                 }
             }
 
@@ -519,11 +730,14 @@ namespace AlgoTradeWithPythonWithScottPlot
 
             if (xArray.Length > 0)
             {
+                logger.Information($"LoadLineDataToPlot: Loaded {xArray.Length} points for {dataDef.Name}, X range: [{xArray.Min():F2}, {xArray.Max():F2}], Y range: [{yArray.Min():F2}, {yArray.Max():F2}]");
+
                 // GuiManager'ın AddAdaptivePlotPublic metodunu kullan
                 guiManager?.AddAdaptivePlotPublic(plot, xArray, yArray, plotId);
 
                 // Son eklenen plottable'ı bul ve özelliklerini ayarla
                 var plottables = plot.Plot.GetPlottables().ToList();
+                logger.Information($"LoadLineDataToPlot: Total plottables after adding: {plottables.Count}");
                 if (plottables.Count > 0)
                 {
                     var lastPlottable = plottables[plottables.Count - 1];
@@ -577,18 +791,21 @@ namespace AlgoTradeWithPythonWithScottPlot
                 fillColor = ScottPlot.Color.FromColor(color).WithAlpha(0.5);
             }
 
-            int index = 0;
             foreach (var line in lines)
             {
                 var parts = line.Split(',');
                 if (parts.Length >= 2)
                 {
-                    bars.Add(new ScottPlot.Bar
+                    // Parse timestamp and convert to OADate for consistent x-axis
+                    if (DateTime.TryParse(parts[0], out DateTime timestamp))
                     {
-                        Position = index++,
-                        Value = double.Parse(parts[1]),
-                        FillColor = fillColor
-                    });
+                        bars.Add(new ScottPlot.Bar
+                        {
+                            Position = timestamp.ToOADate(),
+                            Value = double.Parse(parts[1], CultureInfo.InvariantCulture),
+                            FillColor = fillColor
+                        });
+                    }
                 }
             }
 

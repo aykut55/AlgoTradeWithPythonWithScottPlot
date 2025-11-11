@@ -3,7 +3,7 @@
     {
       "plotId": "Plot_0",
       "plotName": "Main Chart - OHLC + MAs",
-      "height": 400,
+      "height": 600,
       "data": [
         {
           "dataId": 0,
@@ -38,7 +38,7 @@
     {
       "plotId": "Plot_1",
       "plotName": "Volume",
-      "height": 150,
+      "height": 500,
       "data": [
         {
           "dataId": 0,
@@ -52,7 +52,7 @@
     {
       "plotId": "Plot_2",
       "plotName": "Moving Averages",
-      "height": 200,
+      "height": 500,
       "data": [
         {
           "dataId": 0,
@@ -80,7 +80,7 @@
     {
       "plotId": "Plot_3",
       "plotName": "RSI",
-      "height": 150,
+      "height": 500,
       "data": [
         {
           "dataId": 0,

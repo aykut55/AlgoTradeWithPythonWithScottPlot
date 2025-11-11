@@ -228,9 +228,9 @@
             pnlTop.Controls.Add(btnClearLogs);
             pnlTop.Controls.Add(btnToggleLogs);
             pnlTop.Dock = DockStyle.Top;
-            pnlTop.Location = new Point(0, 24);
+            pnlTop.Location = new Point(160, 24);
             pnlTop.Name = "pnlTop";
-            pnlTop.Size = new Size(1415, 127);
+            pnlTop.Size = new Size(1127, 127);
             pnlTop.TabIndex = 0;
             // 
             // txtPoints
@@ -394,19 +394,18 @@
             // 
             pnlLeft.BackColor = Color.LightBlue;
             pnlLeft.Dock = DockStyle.Left;
-            pnlLeft.Location = new Point(0, 151);
+            pnlLeft.Location = new Point(0, 24);
             pnlLeft.Name = "pnlLeft";
-            pnlLeft.Size = new Size(160, 422);
+            pnlLeft.Size = new Size(160, 549);
             pnlLeft.TabIndex = 1;
-            pnlLeft.Visible = true;
             // 
             // pnlRight
             // 
             pnlRight.BackColor = Color.LightCoral;
             pnlRight.Dock = DockStyle.Right;
-            pnlRight.Location = new Point(1375, 151);
+            pnlRight.Location = new Point(1287, 24);
             pnlRight.Name = "pnlRight";
-            pnlRight.Size = new Size(40, 422);
+            pnlRight.Size = new Size(128, 549);
             pnlRight.TabIndex = 5;
             pnlRight.Visible = false;
             // 
@@ -415,9 +414,9 @@
             pnlCenter.AutoScroll = true;
             pnlCenter.BackColor = Color.White;
             pnlCenter.Dock = DockStyle.Fill;
-            pnlCenter.Location = new Point(286, 151);
+            pnlCenter.Location = new Point(0, 24);
             pnlCenter.Name = "pnlCenter";
-            pnlCenter.Size = new Size(1089, 268);
+            pnlCenter.Size = new Size(1415, 549);
             pnlCenter.TabIndex = 3;
             // 
             // statusStrip1
@@ -440,9 +439,9 @@
             pnlBottom.BackColor = Color.LightYellow;
             pnlBottom.Controls.Add(pnlLogs);
             pnlBottom.Dock = DockStyle.Bottom;
-            pnlBottom.Location = new Point(286, 419);
+            pnlBottom.Location = new Point(160, 419);
             pnlBottom.Name = "pnlBottom";
-            pnlBottom.Size = new Size(1089, 154);
+            pnlBottom.Size = new Size(1127, 154);
             pnlBottom.TabIndex = 7;
             pnlBottom.Visible = false;
             // 
@@ -452,7 +451,7 @@
             pnlLogs.Dock = DockStyle.Fill;
             pnlLogs.Location = new Point(0, 0);
             pnlLogs.Name = "pnlLogs";
-            pnlLogs.Size = new Size(1089, 154);
+            pnlLogs.Size = new Size(1127, 154);
             pnlLogs.TabIndex = 4;
             pnlLogs.Visible = false;
             // 
@@ -465,7 +464,7 @@
             txtLogs.Name = "txtLogs";
             txtLogs.ReadOnly = true;
             txtLogs.ScrollBars = ScrollBars.Both;
-            txtLogs.Size = new Size(1089, 154);
+            txtLogs.Size = new Size(1127, 154);
             txtLogs.TabIndex = 0;
             // 
             // Form1
