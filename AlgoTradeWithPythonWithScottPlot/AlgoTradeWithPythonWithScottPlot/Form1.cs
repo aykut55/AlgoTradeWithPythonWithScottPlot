@@ -134,8 +134,12 @@ namespace AlgoTradeWithPythonWithScottPlot
                 var plot = guiManager.GetPlot(createdId);
                 if (plot != null)
                 {
+                    // max DataCount
+                    int dataCount = 10 * 1000 * 1000;
+                        dataCount = 1000;
+
                     // Generate data using DataManager (idx = 0: Complex wave with noise)
-                    var (x, y) = DataManager.GenerateData(idx: 0, points: 1000);
+                    var (x, y) = DataManager.GenerateData(idx: 0, points: dataCount);
 
                     // Use GuiManager's adaptive plotting method for automatic optimization
                     guiManager.AddAdaptivePlotPublic(plot, x, y, createdId);
